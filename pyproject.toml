@@ -1,0 +1,29 @@
+[project]
+name = "sonic-diffusion"
+version = "0.1.0"
+description = ""
+authors = []
+
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "pandas==2.2.3",
+    "torch>=2.2.0",
+    "diffusers>=0.30.1",
+    "numpy>=1.21.0",
+    "omegaconf==2.1.2",
+    "wandb==0.19.0",
+    "clip==0.2.0",
+    "clip-score==0.1.1",
+    "pytorch-fid==0.3.0",
+    "torchmetrics>=1.6.1",
+    "image-reward==1.5",
+    "DeepCache==0.1.1",
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
