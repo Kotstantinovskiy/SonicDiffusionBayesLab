@@ -62,3 +62,6 @@ env/
 ###########
 Thumbs.db
 ehthumbs.db
+
+*.ipynb
+*.jpg
