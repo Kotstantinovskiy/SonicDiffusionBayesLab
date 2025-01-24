@@ -1,1 +1,1 @@
-# sonic_diffusion_bayes_lab
+# Sonic Diffusion Project @ bayes_lab
