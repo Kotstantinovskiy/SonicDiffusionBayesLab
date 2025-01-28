@@ -1,13 +1,15 @@
 from collections import defaultdict
 
 import torch
-from src.experiments.base_experiment import BaseMethod
 from DeepCache import DeepCacheSDHelper
 from diffusers import StableDiffusionPipeline
+from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
+from torchvision import transforms
 from tqdm import tqdm
 
 from src.dataset.dataset import ImageDatasetWithPrompts
+from src.experiments.base_experiment import BaseMethod
 from src.loggers.wandb import Logger
 from src.registry import methods_registry, metrics_registry, models_registry
 
@@ -35,39 +37,52 @@ class DeepCacheMethod(BaseMethod):
 
     def setup_model(self):
         model_name = self.config.model.model_name
-        self.model = models_registry[model_name].from_pretrained(self.config.model.pretrained_model)
+        self.model = models_registry[model_name].from_pretrained(
+            self.config.model.pretrained_model
+        )
         self.model.to(self.device)
 
     def setup_dataset(self):
         self.dataset_test_dir = self.config.dataset.img_dataset
         self.prompts_test_file = self.config.dataset.prompts
+        self.image_size = self.config.dataset.get("image_size", 512)
+
+        transform = transforms.Compose(
+            [
+                transforms.Resize(self.image_size),
+                transforms.CenterCrop(self.image_size),
+                transforms.ToTensor(),
+            ]
+        )
 
         self.test_dataset = ImageDatasetWithPrompts(
-            image_dir=self.dataset_test_dir, text_prompts_json=self.prompts_test_file
+            image_dir=self.dataset_test_dir,
+            prompts_file=self.prompts_test_file,
+            transform=transform,
         )
 
     def setup_metrics(self):
-        self.quality_metrics = self.config.quality_metrics
-        self.speed_metrics = self.config.speed_metrics
+        self.quality_metrics = list(self.config.quality_metrics)
+        self.speed_metrics = list(self.config.speed_metrics)
 
         if len(self.quality_metrics) == 0 or len(self.speed_metrics) == 0:
             assert False, "Quality and Speed metrics should be provided"
 
         self.clip_score_metric = None
-        if "clip_score" in self.config.quality_metrics:
+        if self.config.quality_metrics.get("clip_score", None):
             self.clip_score_metric = metrics_registry["clip_score"](
                 model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
             )
 
         self.image_reward_metric = None
-        if "image_reward" in self.config.quality_metrics:
+        if self.config.quality_metrics.get("image_reward", None):
             self.image_reward_metric = metrics_registry["image_reward"](
                 model_name=self.config.quality_metrics.image_reward.model_name,
                 device=self.device,
             )
 
         self.fid_metric = None
-        if "fid" in self.config.quality_metrics:
+        if self.config.quality_metrics.get("fid", None):
             self.fid_metric = metrics_registry["fid"](
                 feature=self.config.quality_metrics.fid.feature,
                 input_img_size=self.config.quality_metrics.fid.input_img_size,
@@ -75,12 +90,12 @@ class DeepCacheMethod(BaseMethod):
             )
 
         self.time_metric = None
-        if "time_metric" in self.config.speed_metrics:
+        if self.config.quality_metrics.get("time_metric", None):
             self.time_metric = metrics_registry["time_metric"]()
 
     def setup_loggers(self):
         self.logger = Logger(
-            config=self.config,
+            config=OmegaConf.to_container(self.config, resolve=True),
             wandb_enable=self.config.logger.get("wandb_enable", True),
             project_name=self.config.logger.get("project_name", None),
             run_name=self.config.experiment_name,
@@ -102,6 +117,7 @@ class DeepCacheMethod(BaseMethod):
 
         helper.enable()
 
+        pred_images_list: list = []
         for idx, batch in enumerate(
             tqdm(
                 test_dataloader, total=len(test_dataloader), desc="DeepCache Experiment"
@@ -110,21 +126,35 @@ class DeepCacheMethod(BaseMethod):
             real_images, prompts = batch["image"], batch["prompt"]
             inference_time, diffusion_pred_imgs = self.model(prompts, output_type="pil")
             pred_images = diffusion_pred_imgs.images[0]
-
-            # update metrics
-            if self.clip_score_metric:
-                self.clip_score_metric.update(pred_images, prompts)
-
-            if self.image_reward_metric:
-                self.image_reward_metric.update(pred_images, prompts)
-
-            if self.fid_metric:
-                self.fid_metric.update(pred_images, [0] * len(pred_images))
-                self.fid_metric.update(real_images, [1] * len(real_images))
+            pred_images_list.append(pred_images)
 
             # update speed metrics
             if self.time_metric:
                 self.time_metric.update(inference_time)
+
+        pred_dataloader = DataLoader(
+            pred_images_list,
+            batch_size=self.config.inference.get("batch_size", 1),
+            shuffle=False,
+        )
+
+        # update metrics
+        for input_batch, output_images in tqdm(
+            zip(test_dataloader, pred_dataloader),
+            total=len(test_dataloader),
+            desc="Calculating metrics...",
+        ):
+            real_images, prompts = input_batch["image"], input_batch["prompt"]
+
+            if self.clip_score_metric:
+                self.clip_score_metric.update(output_images, prompts)
+
+            if self.image_reward_metric:
+                self.image_reward_metric.update(output_images, prompts)
+
+            if self.fid_metric:
+                self.fid_metric.update(output_images, [0] * len(output_images))
+                self.fid_metric.update(real_images, [1] * len(real_images))
 
         metric_dict = defaultdict(list)
         if self.clip_score_metric:

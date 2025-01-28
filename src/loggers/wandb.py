@@ -3,6 +3,7 @@ import os
 from collections import defaultdict
 
 import pandas as pd
+
 import wandb
 
 
@@ -11,14 +12,20 @@ class WandbLogger:
         wandb.login(key=os.environ["WANDB_KEY"].strip())
 
         self.wandb_args = {
-            "id": run_id if run_id else wandb.util.generate_id(),
+            # "id": run_id if run_id else wandb.util.generate_id(),
             "project": project_name,
-            "name": run_name,
+            # "name": run_name,
             "config": config if config else {},
-            "resume": "allow",
+            # "resume": "allow",
         }
 
-        self.run = wandb.init(**self.wandb_args)
+        self.run = wandb.init(
+            id=run_id if run_id else wandb.util.generate_id(),
+            project=project_name,
+            name=run_name,
+            config=config if config else {},
+            resume="allow",
+        )
 
     def log_values(self, values: dict, step: int):
         self.run.log(values, step=step)
@@ -49,13 +56,17 @@ class Logger:
         if wandb_enable:
             if project_name is None or run_name is None:
                 raise ValueError()
-
+            print(project_name)
+            print(run_name)
+            print(run_id)
+            print(config)
             self.wandb_logger = WandbLogger(
                 project_name=project_name,
                 run_name=run_name,
                 run_id=run_id,
                 config=config,
             )
+            print("BBBBB")
 
         self.logger = logging.getLogger()
         self.wandb_enable = wandb_enable

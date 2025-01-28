@@ -8,11 +8,17 @@ model:
 dataset:
   img_dataset: "./data/dataset/test/"
   prompts: "./data/dataset/img2annotations_test.json"
+  image_size: 512
 quality_metrics:
-  - clip_score
-  - image_reward
-  - fid
-  - time_metric
+  clip_score:
+    model_name_or_path: "openai/clip-vit-base-patch16"
+  image_reward:
+    model_name: "ImageReward-v1.0"
+  fid:
+    feature: 64
+    input_img_size: 512
+    normalize: False
+speed_metrics: ['time_metric']
 logger:
   wandb_enable: True
   project_name: "Sonic diffusion"

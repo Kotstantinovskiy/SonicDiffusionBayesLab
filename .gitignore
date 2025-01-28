@@ -65,3 +65,5 @@ ehthumbs.db
 
 *.ipynb
 *.jpg
+
+wandb/*

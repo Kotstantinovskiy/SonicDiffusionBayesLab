@@ -53,7 +53,6 @@ class RewardModel(Metric, CustomMetric):
     ):
         super().__init__(**kwargs)
         self.rm_model = RM.load(name=model_name, device=device)
-        self.device = device
         self.add_state("reward_sum", default=torch.tensor(0), dist_reduce_fx="sum")
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 

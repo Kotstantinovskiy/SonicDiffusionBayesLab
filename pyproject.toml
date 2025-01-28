@@ -19,6 +19,8 @@ dependencies = [
     "torchmetrics>=1.6.1",
     "image-reward==1.5",
     "DeepCache==0.1.1",
+    "pytorch-lightning==2.4.0",
+    "torch-fidelity==0.3.0",
 ]
 
 [tool.poetry]
