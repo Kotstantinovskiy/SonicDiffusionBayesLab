@@ -54,20 +54,20 @@ class DeepCacheMethod(BaseMethod):
             assert False, "Quality and Speed metrics should be provided"
 
         self.clip_score_metric = None
-        if self.config.quality_metrics.get("clip_score", None):
+        if "clip_score" in self.config.quality_metrics:
             self.clip_score_metric = metrics_registry["clip_score"](
                 model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
             )
 
         self.image_reward_metric = None
-        if self.config.quality_metrics.get("image_reward", None):
+        if "image_reward" in self.config.quality_metrics:
             self.image_reward_metric = metrics_registry["image_reward"](
                 model_name=self.config.quality_metrics.image_reward.model_name,
-                device=self.config.device,
+                device=self.device,
             )
 
         self.fid_metric = None
-        if self.config.quality_metrics.get("fid", None):
+        if "fid" in self.config.quality_metrics:
             self.fid_metric = metrics_registry["fid"](
                 feature=self.config.quality_metrics.fid.feature,
                 input_img_size=self.config.quality_metrics.fid.input_img_size,
@@ -75,7 +75,7 @@ class DeepCacheMethod(BaseMethod):
             )
 
         self.time_metric = None
-        if self.config.speed_metrics.get("time_metric", None):
+        if "time_metric" in self.config.speed_metrics:
             self.time_metric = metrics_registry["time_metric"]()
 
     def setup_loggers(self):
@@ -83,7 +83,7 @@ class DeepCacheMethod(BaseMethod):
             config=self.config,
             wandb_enable=self.config.logger.get("wandb_enable", True),
             project_name=self.config.logger.get("project_name", None),
-            run_name=self.config.logger.get("run_name", None),
+            run_name=self.config.experiment_name,
             run_id=self.config.logger.get("run_id", None),
         )
 
@@ -96,7 +96,7 @@ class DeepCacheMethod(BaseMethod):
 
         test_dataloader = DataLoader(
             self.test_dataset,
-            batch_size=self.config.get("batch_size", 1),
+            batch_size=self.config.inference.get("batch_size", 1),
             shuffle=False,
         )
 
