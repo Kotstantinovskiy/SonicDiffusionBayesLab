@@ -1,0 +1,19 @@
+experiment_name: "Deep cache"
+model_name: stable_diffusion_model
+pretrained_model: runwayml/stable-diffusion-v1-5
+dataset:
+  img_dataset: "./data/dataset/test/"
+  prompts: "./data/dataset/img2annotations_test.json"
+quality_metrics:
+  - clip_score
+  - image_reward
+  - fid
+  - time_metric
+logger:
+  wandb_enable: True
+  project_name: "Sonic diffusion"
+inference:
+  batch_size: 4
+deepcache_params:
+  cache_interval: 1
+  cache_branch_id: 0
