@@ -16,5 +16,5 @@ if __name__ == "__main__":
     config = OmegaConf.load(os.path.join("./configs", args.config))
 
     setup_seed(config.experiment.get("seed", 29))
-    print(methods_registry.arg_keys)
+
     methods_registry[config.experiment.method](config).run_experiment()
