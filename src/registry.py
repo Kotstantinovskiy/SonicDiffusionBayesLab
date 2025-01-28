@@ -1,4 +1,4 @@
-from utils.class_registry import ClassRegistry
+from src.utils.class_registry import ClassRegistry
 
 models_registry = ClassRegistry()
 methods_registry = ClassRegistry()

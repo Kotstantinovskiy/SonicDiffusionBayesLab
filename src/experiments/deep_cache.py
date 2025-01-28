@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 import torch
-from base_experiment import BaseMethod
+from src.experiments.base_experiment import BaseMethod
 from DeepCache import DeepCacheSDHelper
 from diffusers import StableDiffusionPipeline
 from torch.utils.data import DataLoader
@@ -34,8 +34,8 @@ class DeepCacheMethod(BaseMethod):
         self.cache_branch_id = config.deepcache_params.get("cache_branch_id", 0)
 
     def setup_model(self):
-        model_name = self.config.model_name
-        self.model = models_registry[model_name].from_pretrained(model_name)
+        model_name = self.config.model.model_name
+        self.model = models_registry[model_name].from_pretrained(self.config.model.pretrained_model)
         self.model.to(self.device)
 
     def setup_dataset(self):

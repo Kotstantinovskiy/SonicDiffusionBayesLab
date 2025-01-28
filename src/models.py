@@ -5,7 +5,7 @@ from diffusers import StableDiffusionPipeline
 from src.registry import models_registry
 
 
-@models_registry.register("stable_diffusion_model")
+@models_registry.add_to_registry("stable_diffusion_model")
 class StableDiffusionModel(StableDiffusionPipeline):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

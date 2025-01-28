@@ -1,6 +1,10 @@
 experiment_name: "Deep cache"
-model_name: stable_diffusion_model
-pretrained_model: runwayml/stable-diffusion-v1-5
+experiment:
+  method: deep_cache
+  seed: 29
+model:
+  model_name: stable_diffusion_model
+  pretrained_model: runwayml/stable-diffusion-v1-5
 dataset:
   img_dataset: "./data/dataset/test/"
   prompts: "./data/dataset/img2annotations_test.json"

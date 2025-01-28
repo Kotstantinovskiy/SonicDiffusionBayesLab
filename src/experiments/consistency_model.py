@@ -1,4 +1,4 @@
-from base_experiment import BaseMethod
+from src.experiments.base_experiment import BaseMethod
 
 from src.registry import methods_registry
 
