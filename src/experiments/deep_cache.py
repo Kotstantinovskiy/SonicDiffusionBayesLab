@@ -124,7 +124,7 @@ class DeepCacheMethod(BaseMethod):
             )
         ):
             real_images, prompts = batch["image"], batch["prompt"]
-            inference_time, diffusion_pred_imgs = self.model(prompts, output_type="pil")
+            diffusion_pred_imgs, inference_time = self.model(prompts, output_type="pil")
             pred_images = diffusion_pred_imgs.images[0]
             pred_images_list.append(pred_images)
 
