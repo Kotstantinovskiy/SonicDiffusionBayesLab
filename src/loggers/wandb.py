@@ -59,21 +59,18 @@ class Logger:
 
         self.logger = logging.getLogger()
         self.wandb_enable = wandb_enable
-        self.losses_memory = defaultdict(list)
-        self.val_metrics_memory = defaultdict(list)
+        self.losses_history = defaultdict(list)
+        self.metrics_history = defaultdict(list)
 
-    def log_metrics(self, val_metrics: dict, step: int):
+    def log_metrics(self, metrics: dict, step: int):
         self.wandb_logger.log_values(
-            {f"metrics/{name}": val for name, val in val_metrics.items()}, step
+            {f"Metrics/{name}": val for name, val in metrics.items()}, step
         )
 
-    def log_metrics_into_table(
-        self, val_metrics_table: dict[str, pd.DataFrame], step: int
-    ):
-        self.wandb_logger.log_tables(
-            {f"metrics/{name}": table for name, table in val_metrics_table.items()},
-            step,
-        )
+    def log_metrics_into_table(self, metrics: dict, step: int):
+        metrics_table = pd.DataFrame.from_dict(metrics, orient="columns")
+
+        self.wandb_logger.log_tables({"Metrics": metrics_table}, step)
 
     def log_batch_of_images(
         self,
