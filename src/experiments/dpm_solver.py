@@ -125,7 +125,6 @@ class DPMSolverMethod(BaseMethod):
                 prompts, num_inference_steps=self.num_steps, output_type="np"
             )
             diffusion_pred_imgs = diffusion_pred_imgs.images
-            print(type(diffusion_pred_imgs))
 
             pred_images = [
                 diffusion_pred_imgs[dim_idx]
@@ -154,8 +153,6 @@ class DPMSolverMethod(BaseMethod):
             real_images, prompts = input_batch["image"], input_batch["prompt"]
             # output_images = output_images.numpy()
             # output_images.permute()
-            print("OUT", output_images)
-            print("OUT", output_images.shape)
             output_images = (output_images * 255).to(torch.uint8).cpu()
 
             if self.clip_score_metric:
