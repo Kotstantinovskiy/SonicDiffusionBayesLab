@@ -73,14 +73,11 @@ class Logger:
     def log_batch_of_images(
         self,
         images: list,
+        name_images: str,
         step: int,
     ):
-        if not self.wandb_enable:
-            self.logger.warning("wandb hasn't been enabled")
-            return
-
         self.wandb_logger.log_images(
-            {"Generated images": [image for image in images]},
+            {name_images: [image for image in images]},
             step=step,
         )
 
