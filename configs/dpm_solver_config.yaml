@@ -18,12 +18,12 @@ quality_metrics:
     feature: 64
     input_img_size: 512
     normalize: False
+speed_metrics: ['time_metric']
 logger:
   wandb_enable: True
   project_name: "Sonic diffusion"
 inference:
   batch_size: 4
 experiment_params:
-  cache_interval: [2]
-  cache_branch_id: 0
-  num_inference_steps: [10, 50, 100]
+  algorithm_type: 'dpmsolver'
+  num_train_timesteps: 100

@@ -29,11 +29,11 @@ class WandbLogger:
         }
         self.run.log(wandb_images, step=step)
 
-    def log_tables(self, tables: dict[str, pd.DataFrame], step: int):
+    def log_tables(self, tables: dict[str, pd.DataFrame]):
         wandb_tables = {
             name: wandb.Table(dataframe=table) for name, table in tables.items()
         }
-        self.run.log(wandb_tables, step=step)
+        self.run.log(wandb_tables)
 
 
 class Logger:
@@ -66,10 +66,9 @@ class Logger:
             {f"Metrics/{name}": val for name, val in metrics.items()}, step
         )
 
-    def log_metrics_into_table(self, metrics: dict, step: int):
+    def log_metrics_into_table(self, metrics: dict, name_table: str):
         metrics_table = pd.DataFrame.from_dict(metrics, orient="columns")
-
-        self.wandb_logger.log_tables({"Metrics": metrics_table}, step)
+        self.wandb_logger.log_tables({name_table: metrics_table})
 
     def log_batch_of_images(
         self,

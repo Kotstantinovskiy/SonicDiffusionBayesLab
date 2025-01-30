@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import torch
 from DeepCache import DeepCacheSDHelper
-from diffusers import DPMSolverMultistepScheduler, StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline
 from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -14,8 +14,8 @@ from src.loggers.wandb import Logger
 from src.registry import methods_registry, metrics_registry, models_registry
 
 
-@methods_registry.add_to_registry("dpm_solver")
-class DPMSolverMethod(BaseMethod):
+@methods_registry.add_to_registry("deep_cache")
+class DeepCacheMethod(BaseMethod):
     def __init__(self, config):
         self.config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -84,7 +84,7 @@ class DPMSolverMethod(BaseMethod):
         if self.config.quality_metrics.get("fid", None):
             self.fid_metric = metrics_registry["fid"](
                 feature=self.config.quality_metrics.fid.feature,
-                input_img_size=self.config.dataset.image_size,
+                input_img_size=self.config.quality_metrics.fid.input_img_size,
                 normalize=self.config.quality_metrics.fid.normalize,
             )
 
@@ -102,17 +102,11 @@ class DPMSolverMethod(BaseMethod):
         )
 
     def run_experiment(self):
-        self.model.scheduler = DPMSolverMultistepScheduler(
-            **self.config.experiment_params
-        )
-
         test_dataloader = DataLoader(
             self.test_dataset,
             batch_size=self.config.inference.get("batch_size", 1),
             shuffle=False,
         )
-
-        self.model.to(self.device)
 
         pred_images_list: list = []
         for idx, batch in enumerate(
@@ -124,20 +118,12 @@ class DPMSolverMethod(BaseMethod):
             diffusion_pred_imgs, inference_time = self.model(
                 prompts, num_inference_steps=self.num_steps, output_type="np"
             )
-            diffusion_pred_imgs = diffusion_pred_imgs.images
-            print(type(diffusion_pred_imgs))
-
-            pred_images = [
-                diffusion_pred_imgs[dim_idx]
-                for dim_idx in range(diffusion_pred_imgs.shape[0])
-            ]
+            pred_images = diffusion_pred_imgs.images[0]
             pred_images_list.extend(pred_images)
 
             # update speed metrics
             if self.time_metric:
                 self.time_metric.update(inference_time)
-
-        self.model.cpu()
 
         pred_dataloader = DataLoader(
             pred_images_list,
@@ -152,11 +138,6 @@ class DPMSolverMethod(BaseMethod):
             desc="Calculating metrics...",
         ):
             real_images, prompts = input_batch["image"], input_batch["prompt"]
-            # output_images = output_images.numpy()
-            # output_images.permute()
-            print("OUT", output_images)
-            print("OUT", output_images.shape)
-            output_images = (output_images * 255).to(torch.uint8).cpu()
 
             if self.clip_score_metric:
                 self.clip_score_metric.update(output_images, prompts)
@@ -165,8 +146,8 @@ class DPMSolverMethod(BaseMethod):
                 self.image_reward_metric.update(output_images, prompts)
 
             if self.fid_metric:
-                self.fid_metric.update(output_images, real=False)
-                self.fid_metric.update(real_images, real=True)
+                self.fid_metric.update(output_images, [0] * len(output_images))
+                self.fid_metric.update(real_images, [1] * len(real_images))
 
         metric_dict = defaultdict(list)
         if self.clip_score_metric:

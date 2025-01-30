@@ -16,6 +16,7 @@ from typing_extensions import Literal
 
 from src.metrics.aethetic_score_model import AethteticScoreMLP
 from src.registry import metrics_registry
+from src.utils.model_utils import to_pil_image
 
 
 class CustomMetric(ABC):
@@ -63,15 +64,16 @@ class RewardModel(Metric, CustomMetric):
 
     def update(self, imgs: list[Image.Image], prompts: list[str] | str) -> None:
         prompts = self._input_format(prompts)
-        if imgs.size0() != len(prompts):
+        imgs = [to_pil_image(img) for img in imgs]
+        if len(imgs) != len(prompts):
             raise ValueError("Imgs and prompts must have the same size")
 
-        self.reward_sum += sum(self.rm_model.inference_rank(prompts, imgs)[1])
-
+        res = self.rm_model.inference_rank(prompts, imgs)[1]
+        self.reward_sum += torch.tensor(sum(res))
         self.total += len(imgs)
 
     def compute(self) -> torch.Tensor:
-        return (self.reward_sum.float() / self.total,)
+        return self.reward_sum.float() / self.total
 
     def calc_metric(
         self,

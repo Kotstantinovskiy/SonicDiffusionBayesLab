@@ -2,7 +2,6 @@ from collections import defaultdict
 
 import torch
 from DeepCache import DeepCacheSDHelper
-from diffusers import StableDiffusionPipeline
 from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -32,8 +31,9 @@ class DeepCacheMethod(BaseMethod):
         # loggers
         self.setup_loggers()
 
-        self.cache_interval = config.deepcache_params.get("cache_interval", 1)
-        self.cache_branch_id = config.deepcache_params.get("cache_branch_id", 0)
+        self.cache_interval = config.experiment_params.cache_interval
+        self.cache_branch_id = config.experiment_params.get("cache_branch_id", 0)
+        self.num_inference_steps = config.experiment_params.num_inference_steps
 
     def setup_model(self):
         model_name = self.config.model.model_name
@@ -62,36 +62,27 @@ class DeepCacheMethod(BaseMethod):
         )
 
     def setup_metrics(self):
-        self.quality_metrics = list(self.config.quality_metrics)
-        self.speed_metrics = list(self.config.speed_metrics)
+        self.metric_dict = defaultdict(list)
 
-        if len(self.quality_metrics) == 0 or len(self.speed_metrics) == 0:
-            assert False, "Quality and Speed metrics should be provided"
+        self.clip_score_gen_metric = metrics_registry["clip_score"](
+            model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
+        )
+        self.clip_score_real_metric = metrics_registry["clip_score"](
+            model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
+        )
 
-        self.clip_score_metric = None
-        if self.config.quality_metrics.get("clip_score", None):
-            self.clip_score_metric = metrics_registry["clip_score"](
-                model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
-            )
+        self.image_reward_metric = metrics_registry["image_reward"](
+            model_name=self.config.quality_metrics.image_reward.model_name,
+            device=self.device,
+        )
 
-        self.image_reward_metric = None
-        if self.config.quality_metrics.get("image_reward", None):
-            self.image_reward_metric = metrics_registry["image_reward"](
-                model_name=self.config.quality_metrics.image_reward.model_name,
-                device=self.device,
-            )
+        self.fid_metric = metrics_registry["fid"](
+            feature=self.config.quality_metrics.fid.feature,
+            input_img_size=self.config.quality_metrics.fid.input_img_size,
+            normalize=self.config.quality_metrics.fid.normalize,
+        )
 
-        self.fid_metric = None
-        if self.config.quality_metrics.get("fid", None):
-            self.fid_metric = metrics_registry["fid"](
-                feature=self.config.quality_metrics.fid.feature,
-                input_img_size=self.config.quality_metrics.fid.input_img_size,
-                normalize=self.config.quality_metrics.fid.normalize,
-            )
-
-        self.time_metric = None
-        if self.config.quality_metrics.get("time_metric", None):
-            self.time_metric = metrics_registry["time_metric"]()
+        self.time_metric = metrics_registry["time_metric"]()
 
     def setup_loggers(self):
         self.logger = Logger(
@@ -102,73 +93,98 @@ class DeepCacheMethod(BaseMethod):
             run_id=self.config.logger.get("run_id", None),
         )
 
+    def _update_metric_dict(self, inference_step):
+        self.metric_dict["nfe"].append(inference_step)
+        self.metric_dict["clip_score_gen_image"].append(
+            self.clip_score_gen_metric.compute().item()
+        )
+        self.metric_dict["clip_score_real_image"].append(
+            self.clip_score_real_metric.compute().item()
+        )
+
+        self.metric_dict["image_reward"].append(
+            self.image_reward_metric.compute().item()
+        )
+
+        self.metric_dict["fid"].append(self.fid_metric.compute().item())
+        self.metric_dict["time_metric"].append(self.time_metric.compute().item())
+
     def run_experiment(self):
-        helper = DeepCacheSDHelper(pipe=self.model)
-        helper.set_params(
-            cache_interval=self.cache_interval,
-            cache_branch_id=self.cache_branch_id,
-        )
-
-        test_dataloader = DataLoader(
-            self.test_dataset,
-            batch_size=self.config.inference.get("batch_size", 1),
-            shuffle=False,
-        )
-
-        helper.enable()
-
-        pred_images_list: list = []
-        for idx, batch in enumerate(
-            tqdm(
-                test_dataloader, total=len(test_dataloader), desc="DeepCache Experiment"
+        for cache_interval in self.cache_interval:
+            helper = DeepCacheSDHelper(pipe=self.model)
+            helper.set_params(
+                cache_interval=cache_interval,
+                cache_branch_id=self.cache_branch_id,
             )
-        ):
-            real_images, prompts = batch["image"], batch["prompt"]
-            diffusion_pred_imgs, inference_time = self.model(prompts, output_type="pil")
-            pred_images = diffusion_pred_imgs.images[0]
-            pred_images_list.append(pred_images)
 
-            # update speed metrics
-            if self.time_metric:
-                self.time_metric.update(inference_time)
+            test_dataloader = DataLoader(
+                self.test_dataset,
+                batch_size=self.config.inference.get("batch_size", 1),
+                shuffle=False,
+            )
 
-        pred_dataloader = DataLoader(
-            pred_images_list,
-            batch_size=self.config.inference.get("batch_size", 1),
-            shuffle=False,
-        )
+            self.metric_dict = defaultdict(list)
+            for inference_step, steps in enumerate(self.num_inference_steps):
+                self.model.to(self.device)
 
-        # update metrics
-        for input_batch, output_images in tqdm(
-            zip(test_dataloader, pred_dataloader),
-            total=len(test_dataloader),
-            desc="Calculating metrics...",
-        ):
-            real_images, prompts = input_batch["image"], input_batch["prompt"]
+                helper.enable()
 
-            if self.clip_score_metric:
-                self.clip_score_metric.update(output_images, prompts)
+                gen_images_list: list = []
+                for idx, batch in enumerate(
+                    tqdm(
+                        test_dataloader,
+                        total=len(test_dataloader),
+                        desc="DeepCache Experiment",
+                    )
+                ):
+                    real_images, prompts = batch["image"], batch["prompt"]
+                    diffusion_gen_imgs, inference_time = self.model(
+                        prompts,
+                        num_inference_steps=steps,
+                        output_type="pt",
+                    )
+                    diffusion_gen_imgs = diffusion_gen_imgs.images
 
-            if self.image_reward_metric:
-                self.image_reward_metric.update(output_images, prompts)
+                    gen_images = [
+                        diffusion_gen_imgs[dim_idx]
+                        for dim_idx in range(diffusion_gen_imgs.shape[0])
+                    ]
+                    gen_images_list.extend(gen_images)
 
-            if self.fid_metric:
-                self.fid_metric.update(output_images, [0] * len(output_images))
-                self.fid_metric.update(real_images, [1] * len(real_images))
+                    # update speed metrics
+                    if self.time_metric:
+                        self.time_metric.update(inference_time)
 
-        metric_dict = defaultdict(list)
-        if self.clip_score_metric:
-            metric_dict["clip_score"].append(self.clip_score_metric.compute())
+                self.model.to("cpu")
 
-        if self.image_reward_metric:
-            metric_dict["image_reward"].append(self.image_reward_metric.compute())
+                gen_dataloader = DataLoader(
+                    gen_images_list,
+                    batch_size=self.config.inference.get("batch_size", 1),
+                    shuffle=False,
+                )
 
-        if self.fid_metric:
-            metric_dict["fid"].append(self.fid_metric.compute())
+                # update metrics
+                for input_batch, gen_images in tqdm(
+                    zip(test_dataloader, gen_dataloader),
+                    total=len(test_dataloader),
+                    desc="Calculating metrics...",
+                ):
+                    real_images, prompts = input_batch["image"], input_batch["prompt"]
+                    real_images = (real_images * 255).to(torch.uint8).cpu()
+                    gen_images = (gen_images * 255).to(torch.uint8).cpu()
 
-        if self.time_metric:
-            metric_dict["time_metric"].append(self.time_metric.compute())
+                    self.clip_score_gen_metric.update(gen_images, prompts)
+                    self.clip_score_real_metric.update(real_images, prompts)
+                    self.image_reward_metric.update(gen_images, prompts)
 
-        self.logger.log_metrics_into_table(metric_dict)
+                    self.fid_metric.update(gen_images, real=False)
+                    self.fid_metric.update(real_images, real=True)
 
-        helper.disable()
+                self._update_metric_dict(inference_step)
+
+                self.logger.log_metrics_into_table(
+                    metrics=self.metric_dict,
+                    name_table=f"Cache interval: {cache_interval}",
+                )
+
+                helper.disable()
