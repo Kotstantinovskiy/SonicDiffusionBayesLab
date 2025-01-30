@@ -124,7 +124,7 @@ class DeepCacheMethod(BaseMethod):
             )
 
             self.metric_dict = defaultdict(list)
-            for inference_step, steps in enumerate(self.num_inference_steps):
+            for idx_step, steps in enumerate(self.num_inference_steps):
                 self.model.to(self.device)
 
                 helper.enable()
@@ -180,7 +180,7 @@ class DeepCacheMethod(BaseMethod):
                     self.fid_metric.update(gen_images, real=False)
                     self.fid_metric.update(real_images, real=True)
 
-                self._update_metric_dict(inference_step)
+                self._update_metric_dict(steps)
 
                 self.logger.log_metrics_into_table(
                     metrics=self.metric_dict,
