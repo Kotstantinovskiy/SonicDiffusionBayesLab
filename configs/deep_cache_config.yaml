@@ -21,6 +21,7 @@ quality_metrics:
 logger:
   wandb_enable: True
   project_name: "Sonic diffusion"
+  log_images_step: 10
 inference:
   batch_size: 4
 experiment_params:

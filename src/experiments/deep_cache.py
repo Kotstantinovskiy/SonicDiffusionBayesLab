@@ -164,8 +164,8 @@ class DeepCacheMethod(BaseMethod):
                 )
 
                 # update metrics
-                for input_batch, gen_images in tqdm(
-                    zip(test_dataloader, gen_dataloader),
+                for idx, (input_batch, gen_images) in tqdm(
+                    enumerate(zip(test_dataloader, gen_dataloader)),
                     total=len(test_dataloader),
                     desc="Calculating metrics...",
                 ):
@@ -179,6 +179,13 @@ class DeepCacheMethod(BaseMethod):
 
                     self.fid_metric.update(gen_images, real=False)
                     self.fid_metric.update(real_images, real=True)
+
+                    if idx % self.config.logger.log_images_step == 0:
+                        self.logger.log_batch_of_images(
+                            images=gen_images[:10],
+                            name_images="Generated images",
+                            step=idx,
+                        )
 
                 self._update_metric_dict(steps)
 
