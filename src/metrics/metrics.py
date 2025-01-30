@@ -145,11 +145,11 @@ class AetheticScore(Metric, CustomMetric):
 class TimeMetric(Metric):
     def __init__(self):
         super().__init__()
-        self.add_state("time", default=torch.tensor(0), dist_reduce_fx="sum")
+        self.add_state("time", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
     def update(self, time: float) -> None:
-        self.time += time
+        self.time += torch.tensor(time)
         self.total += 1
 
     def compute(self) -> float:
