@@ -54,7 +54,7 @@ class RewardModel(Metric, CustomMetric):
     ):
         super().__init__(**kwargs)
         self.rm_model = RM.load(name=model_name, device=device)
-        self.add_state("reward_sum", default=torch.tensor(0), dist_reduce_fx="sum")
+        self.add_state("reward_sum", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
     def _input_format(self, prompts: list[str] | str) -> list[str]:
