@@ -192,7 +192,6 @@ class DPMSolverMethod(BaseMethod):
                     self.logger.log_batch_of_images(
                         images=gen_images[:10],
                         name_images=f"Solver order: {self.solver_order}, Inference steps: {steps}",
-                        step=idx,
                     )
 
             self._update_metric_dict(steps)
