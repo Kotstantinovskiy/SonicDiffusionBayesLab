@@ -1,6 +1,6 @@
 experiment_name: "DPM solver"
 experiment:
-  method: "dpm_sovler"
+  method: "dpm_solver"
   seed: 29
 model:
   model_name: "stable_diffusion_model"
