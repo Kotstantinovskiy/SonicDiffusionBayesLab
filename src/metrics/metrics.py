@@ -148,9 +148,9 @@ class TimeMetric(Metric):
         self.add_state("time", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
-    def update(self, time: float) -> None:
+    def update(self, time: float, batch_size: int) -> None:
         self.time += torch.tensor(time)
-        self.total += 1
+        self.total += torch.tensor(batch_size)
 
     def compute(self) -> float:
         return self.time / self.total

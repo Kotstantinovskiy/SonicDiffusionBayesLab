@@ -152,8 +152,7 @@ class DeepCacheMethod(BaseMethod):
                     gen_images_list.extend(gen_images)
 
                     # update speed metrics
-                    if self.time_metric:
-                        self.time_metric.update(inference_time)
+                    self.time_metric.update(inference_time, batch_size)
 
                 self.model.to("cpu")
 
@@ -183,7 +182,7 @@ class DeepCacheMethod(BaseMethod):
                     if idx % self.config.logger.log_images_step == 0:
                         self.logger.log_batch_of_images(
                             images=gen_images[:10],
-                            name_images="Generated images",
+                            name_images=f"Cache interval: {cache_interval}, Inference steps: {steps}",
                             step=idx,
                         )
 
