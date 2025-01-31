@@ -1,8 +1,7 @@
 from collections import defaultdict
 
 import torch
-from DeepCache import DeepCacheSDHelper
-from diffusers import DPMSolverMultistepScheduler, StableDiffusionPipeline
+from diffusers import DPMSolverMultistepScheduler
 from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -32,7 +31,10 @@ class DPMSolverMethod(BaseMethod):
         # loggers
         self.setup_loggers()
 
-        self.num_steps = config.experiment_params.get("num_steps", 50)
+        self.algorithm_type = config.experiment_params.algorithm_type
+        self.num_inference_steps = config.experiment_params.num_inference_steps
+        self.num_train_timesteps = config.experiment_params.num_train_timesteps
+        self.solver_order = config.experiment_params.solver_order
 
     def setup_model(self):
         model_name = self.config.model.model_name
@@ -61,36 +63,31 @@ class DPMSolverMethod(BaseMethod):
         )
 
     def setup_metrics(self):
-        self.quality_metrics = list(self.config.quality_metrics)
-        self.speed_metrics = list(self.config.speed_metrics)
+        self.metric_dict = defaultdict(list)
 
-        if len(self.quality_metrics) == 0 or len(self.speed_metrics) == 0:
-            assert False, "Quality and Speed metrics should be provided"
+        self.clip_score_gen_metric = metrics_registry["clip_score"](
+            model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
+        )
+        self.clip_score_real_metric = metrics_registry["clip_score"](
+            model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
+        )
 
-        self.clip_score_metric = None
-        if self.config.quality_metrics.get("clip_score", None):
-            self.clip_score_metric = metrics_registry["clip_score"](
-                model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
-            )
+        self.image_reward_gen_metric = metrics_registry["image_reward"](
+            model_name=self.config.quality_metrics.image_reward.model_name,
+            device=self.device,
+        )
+        self.image_reward_real_metric = metrics_registry["image_reward"](
+            model_name=self.config.quality_metrics.image_reward.model_name,
+            device=self.device,
+        )
 
-        self.image_reward_metric = None
-        if self.config.quality_metrics.get("image_reward", None):
-            self.image_reward_metric = metrics_registry["image_reward"](
-                model_name=self.config.quality_metrics.image_reward.model_name,
-                device=self.device,
-            )
+        self.fid_metric = metrics_registry["fid"](
+            feature=self.config.quality_metrics.fid.feature,
+            input_img_size=self.config.quality_metrics.fid.input_img_size,
+            normalize=self.config.quality_metrics.fid.normalize,
+        )
 
-        self.fid_metric = None
-        if self.config.quality_metrics.get("fid", None):
-            self.fid_metric = metrics_registry["fid"](
-                feature=self.config.quality_metrics.fid.feature,
-                input_img_size=self.config.dataset.image_size,
-                normalize=self.config.quality_metrics.fid.normalize,
-            )
-
-        self.time_metric = None
-        if self.config.quality_metrics.get("time_metric", None):
-            self.time_metric = metrics_registry["time_metric"]()
+        self.time_metric = metrics_registry["time_metric"]()
 
     def setup_loggers(self):
         self.logger = Logger(
@@ -101,81 +98,107 @@ class DPMSolverMethod(BaseMethod):
             run_id=self.config.logger.get("run_id", None),
         )
 
+    def _update_metric_dict(self, inference_step):
+        self.metric_dict["nfe"].append(inference_step)
+        self.metric_dict["clip_score_gen_image"].append(
+            self.clip_score_gen_metric.compute().item()
+        )
+        self.metric_dict["clip_score_real_image"].append(
+            self.clip_score_real_metric.compute().item()
+        )
+
+        self.metric_dict["image_reward_gen"].append(
+            self.image_reward_gen_metric.compute().item()
+        )
+        self.metric_dict["image_reward_real"].append(
+            self.image_reward_real_metric.compute().item()
+        )
+
+        self.metric_dict["fid"].append(self.fid_metric.compute().item())
+        self.metric_dict["time_metric"].append(self.time_metric.compute().item())
+
     def run_experiment(self):
         self.model.scheduler = DPMSolverMultistepScheduler(
-            **self.config.experiment_params
+            solver_order=self.solver_order,
+            num_train_timesteps=self.num_train_timesteps,
+            algorithm_type=self.algorithm_type,
         )
+        
+        batch_size = self.config.inference.get("batch_size", 1)
 
         test_dataloader = DataLoader(
             self.test_dataset,
-            batch_size=self.config.inference.get("batch_size", 1),
+            batch_size=batch_size,
             shuffle=False,
         )
 
-        self.model.to(self.device)
+        self.metric_dict = defaultdict(list)
+        for idx_step, steps in enumerate(self.num_inference_steps):
 
-        pred_images_list: list = []
-        for idx, batch in enumerate(
-            tqdm(
-                test_dataloader, total=len(test_dataloader), desc="DeepCache Experiment"
+            self.model.to(self.device)
+
+            gen_images_list: list = []
+            for idx, batch in enumerate(
+                tqdm(
+                    test_dataloader,
+                    total=len(test_dataloader),
+                    desc="DeepCache Experiment",
+                )
+            ):
+                real_images, prompts = batch["image"], batch["prompt"]
+                diffusion_gen_imgs, inference_time = self.model(
+                    prompts,
+                    num_inference_steps=steps,
+                    output_type="pt",
+                )
+                diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
+
+                gen_images = [
+                    diffusion_gen_imgs[dim_idx]
+                    for dim_idx in range(diffusion_gen_imgs.shape[0])
+                ]
+                gen_images_list.extend(gen_images)
+
+                # update speed metrics
+                self.time_metric.update(inference_time, batch_size)
+
+            self.model.to("cpu")
+
+            gen_dataloader = DataLoader(
+                gen_images_list,
+                batch_size=batch_size,
+                shuffle=False,
             )
-        ):
-            real_images, prompts = batch["image"], batch["prompt"]
-            diffusion_pred_imgs, inference_time = self.model(
-                prompts, num_inference_steps=self.num_steps, output_type="np"
-            )
-            diffusion_pred_imgs = diffusion_pred_imgs.images
 
-            pred_images = [
-                diffusion_pred_imgs[dim_idx]
-                for dim_idx in range(diffusion_pred_imgs.shape[0])
-            ]
-            pred_images_list.extend(pred_images)
+            # update metrics
+            for idx, (input_batch, gen_images) in tqdm(
+                enumerate(zip(test_dataloader, gen_dataloader)),
+                total=len(test_dataloader),
+                desc="Calculating metrics...",
+            ):
+                real_images, prompts = input_batch["image"], input_batch["prompt"]
+                real_images = (real_images * 255).to(torch.uint8).cpu()
+                gen_images = (gen_images * 255).to(torch.uint8).cpu()
 
-            # update speed metrics
-            if self.time_metric:
-                self.time_metric.update(inference_time)
+                self.clip_score_gen_metric.update(gen_images, prompts)
+                self.clip_score_real_metric.update(real_images, prompts)
 
-        self.model.cpu()
+                self.image_reward_gen_metric.update(gen_images, prompts)
+                self.image_reward_real_metric.update(real_images, prompts)
 
-        pred_dataloader = DataLoader(
-            pred_images_list,
-            batch_size=self.config.inference.get("batch_size", 1),
-            shuffle=False,
-        )
-
-        # update metrics
-        for input_batch, output_images in tqdm(
-            zip(test_dataloader, pred_dataloader),
-            total=len(test_dataloader),
-            desc="Calculating metrics...",
-        ):
-            real_images, prompts = input_batch["image"], input_batch["prompt"]
-            # output_images = output_images.numpy()
-            # output_images.permute()
-            output_images = (output_images * 255).to(torch.uint8).cpu()
-
-            if self.clip_score_metric:
-                self.clip_score_metric.update(output_images, prompts)
-
-            if self.image_reward_metric:
-                self.image_reward_metric.update(output_images, prompts)
-
-            if self.fid_metric:
-                self.fid_metric.update(output_images, real=False)
+                self.fid_metric.update(gen_images, real=False)
                 self.fid_metric.update(real_images, real=True)
 
-        metric_dict = defaultdict(list)
-        if self.clip_score_metric:
-            metric_dict["clip_score"].append(self.clip_score_metric.compute())
+                if idx % self.config.logger.log_images_step == 0:
+                    self.logger.log_batch_of_images(
+                        images=gen_images[:10],
+                        name_images=f"Solver order: {self.solver_order}, Inference steps: {steps}",
+                        step=idx,
+                    )
 
-        if self.image_reward_metric:
-            metric_dict["image_reward"].append(self.image_reward_metric.compute())
+            self._update_metric_dict(steps)
 
-        if self.fid_metric:
-            metric_dict["fid"].append(self.fid_metric.compute())
-
-        if self.time_metric:
-            metric_dict["time_metric"].append(self.time_metric.compute())
-
-        self.logger.log_metrics_into_table(metric_dict)
+            self.logger.log_metrics_into_table(
+                metrics=self.metric_dict,
+                name_table=f"Solver order: {self.solver_order}, Inference steps: {steps}",
+            )
