@@ -152,7 +152,7 @@ class DeepCacheMethod(BaseMethod):
                         num_inference_steps=steps,
                         output_type="pt",
                     )
-                    diffusion_gen_imgs = diffusion_gen_imgs.images
+                    diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
 
                     gen_images = [
                         diffusion_gen_imgs[dim_idx]
