@@ -123,7 +123,7 @@ class DPMSolverMethod(BaseMethod):
             num_train_timesteps=self.num_train_timesteps,
             algorithm_type=self.algorithm_type,
         )
-        
+
         batch_size = self.config.inference.get("batch_size", 1)
 
         test_dataloader = DataLoader(
@@ -134,7 +134,6 @@ class DPMSolverMethod(BaseMethod):
 
         self.metric_dict = defaultdict(list)
         for idx_step, steps in enumerate(self.num_inference_steps):
-
             self.model.to(self.device)
 
             gen_images_list: list = []

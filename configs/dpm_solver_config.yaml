@@ -26,4 +26,6 @@ inference:
   batch_size: 4
 experiment_params:
   algorithm_type: 'dpmsolver'
-  num_train_timesteps: 100
+  solver_order: 2
+  num_train_timesteps: 1000
+  num_inference_steps: [5, 10 , 20]
