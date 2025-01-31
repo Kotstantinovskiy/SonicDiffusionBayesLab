@@ -1,6 +1,6 @@
-experiment_name: "DPM solver"
+experiment_name: "Default stable diffusion"
 experiment:
-  method: dpm_sovler
+  method: default
   seed: 29
 model:
   model_name: stable_diffusion_model
@@ -25,7 +25,4 @@ logger:
 inference:
   batch_size: 32
 experiment_params:
-  algorithm_type: 'dpmsolver'
-  solver_order: 2
-  num_train_timesteps: 1000
-  num_inference_steps: [5, 10 , 20]
+  num_inference_steps: [10, 50, 100]
