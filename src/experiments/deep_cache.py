@@ -117,6 +117,8 @@ class DeepCacheMethod(BaseMethod):
         self.metric_dict["time_metric"].append(self.time_metric.compute().item())
 
     def run_experiment(self):
+        batch_size = self.config.inference.get("batch_size", 1)
+
         for cache_interval in self.cache_interval:
             helper = DeepCacheSDHelper(pipe=self.model)
             helper.set_params(
@@ -126,7 +128,7 @@ class DeepCacheMethod(BaseMethod):
 
             test_dataloader = DataLoader(
                 self.test_dataset,
-                batch_size=self.config.inference.get("batch_size", 1),
+                batch_size=batch_size,
                 shuffle=False,
             )
 
@@ -165,7 +167,7 @@ class DeepCacheMethod(BaseMethod):
 
                 gen_dataloader = DataLoader(
                     gen_images_list,
-                    batch_size=self.config.inference.get("batch_size", 1),
+                    batch_size=batch_size,
                     shuffle=False,
                 )
 
