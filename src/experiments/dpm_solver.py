@@ -35,6 +35,7 @@ class DPMSolverMethod(BaseMethod):
         self.num_inference_steps = config.experiment_params.num_inference_steps
         self.num_train_timesteps = config.experiment_params.num_train_timesteps
         self.solver_order = config.experiment_params.solver_order
+        self.final_sigmas_type = config.experiment_params.sigma_min
 
     def setup_model(self):
         model_name = self.config.model.model_name
@@ -124,6 +125,7 @@ class DPMSolverMethod(BaseMethod):
             solver_order=self.solver_order,
             num_train_timesteps=self.num_train_timesteps,
             algorithm_type=self.algorithm_type,
+            final_sigmas_type=self.final_sigmas_type,
         )
 
         batch_size = self.config.inference.get("batch_size", 1)
