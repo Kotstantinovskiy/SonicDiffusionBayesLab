@@ -39,7 +39,9 @@ class DPMSolverMethod(BaseMethod):
     def setup_model(self):
         model_name = self.config.model.model_name
         self.model = models_registry[model_name].from_pretrained(
-            self.config.model.pretrained_model
+            self.config.model.pretrained_model,
+            safety_checker=None,
+            requires_safety_checker=False,
         )
         self.model.to(self.device)
 
