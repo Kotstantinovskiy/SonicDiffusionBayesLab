@@ -70,11 +70,7 @@ class DefaultStableDiffusion(BaseMethod):
             model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
         )
 
-        self.image_reward_gen_metric = metrics_registry["image_reward"](
-            model_name=self.config.quality_metrics.image_reward.model_name,
-            device=self.device,
-        )
-        self.image_reward_real_metric = metrics_registry["image_reward"](
+        self.image_reward_metric = metrics_registry["image_reward"](
             model_name=self.config.quality_metrics.image_reward.model_name,
             device=self.device,
         )
@@ -105,11 +101,8 @@ class DefaultStableDiffusion(BaseMethod):
             self.clip_score_real_metric.compute().item()
         )
 
-        self.metric_dict["image_reward_gen"].append(
-            self.image_reward_gen_metric.compute().item()
-        )
-        self.metric_dict["image_reward_real"].append(
-            self.image_reward_real_metric.compute().item()
+        self.metric_dict["image_reward"].append(
+            self.image_reward_metric.compute().item()
         )
 
         self.metric_dict["fid"].append(self.fid_metric.compute().item())
@@ -174,8 +167,7 @@ class DefaultStableDiffusion(BaseMethod):
                 self.clip_score_gen_metric.update(gen_images, prompts)
                 self.clip_score_real_metric.update(real_images, prompts)
 
-                self.image_reward_gen_metric.update(gen_images, prompts)
-                self.image_reward_real_metric.update(real_images, prompts)
+                self.image_reward_metric.update(real_images, gen_images, prompts)
 
                 self.fid_metric.update(gen_images, real=False)
                 self.fid_metric.update(real_images, real=True)

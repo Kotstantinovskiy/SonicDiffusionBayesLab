@@ -62,15 +62,22 @@ class RewardModel(Metric, CustomMetric):
             prompts = [prompts]
         return prompts
 
-    def update(self, imgs: list[Image.Image], prompts: list[str] | str) -> None:
+    def update(
+        self,
+        real_imgs: list[Image.Image],
+        gen_imgs: list[Image.Image],
+        prompts: list[str] | str,
+    ) -> None:
         prompts = self._input_format(prompts)
-        imgs = [to_pil_image(img) for img in imgs]
-        if len(imgs) != len(prompts):
+        real_imgs = [to_pil_image(img) for img in real_imgs]
+        gen_imgs = [to_pil_image(img) for img in gen_imgs]
+        if len(real_imgs) != len(prompts):
             raise ValueError("Imgs and prompts must have the same size")
 
-        res = self.rm_model.inference_rank(prompts, imgs)[1]
-        self.reward_sum += torch.tensor(sum(res))
-        self.total += len(imgs)
+        for prompt, real_img, gen_img in zip(prompts, real_imgs, gen_imgs):
+            idxs, reward = self.rm_model.inference_rank(prompt, [real_img, gen_img])
+            self.reward_sum += torch.tensor(int(reward[0] <= reward[1]))
+            self.total += 1
 
     def compute(self) -> torch.Tensor:
         return self.reward_sum.float() / self.total
