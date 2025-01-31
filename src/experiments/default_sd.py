@@ -181,7 +181,7 @@ class DefaultStableDiffusion(BaseMethod):
                 if idx % self.config.logger.log_images_step == 0:
                     self.logger.log_batch_of_images(
                         images=gen_images[:10],
-                        name_images=f"Solver order: {self.solver_order}, Inference steps: {steps}",
+                        name_images=f"Inference steps: {steps}",
                         step=idx,
                     )
 
@@ -189,5 +189,5 @@ class DefaultStableDiffusion(BaseMethod):
 
             self.logger.log_metrics_into_table(
                 metrics=self.metric_dict,
-                name_table=f"Solver order: {self.solver_order}, Inference steps: {steps}",
+                name_table=f"Inference steps: {steps}",
             )
