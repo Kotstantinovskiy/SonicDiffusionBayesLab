@@ -25,7 +25,7 @@ def save_image(image_dir, image_name, image):
     if not os.path.exists(image_dir):
         os.makedirs(image_dir)
 
-    image.save(f"{image_dir}/{image_name}")
+    image.save(f"{image_dir}/{image_name.split('.')[0]}.png")
 
 
 def time_it(func):
