@@ -132,7 +132,7 @@ class BaseMethod(ABC):
             total=len(test_dataloader),
             desc="Calculating metrics...",
         ):
-            image_file, real_images, prompts = (
+            image_files, real_images, prompts = (
                 input_batch["image_file"],
                 input_batch["image"],
                 input_batch["prompt"],
@@ -155,7 +155,7 @@ class BaseMethod(ABC):
                 )
 
             if self.config.logger.save_images:
-                for gen_image in gen_images.unbind(0):
+                for image_file, gen_image in zip(image_files, gen_images.unbind(0)):
                     save_image(
                         self.config.logger.save_images_dir.format(
                             experiment=self.config.experiment_name
