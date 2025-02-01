@@ -9,7 +9,7 @@ from tqdm import tqdm
 from src.dataset.dataset import ImageDatasetWithPrompts
 from src.loggers.wandb import Logger
 from src.registry import metrics_registry, models_registry
-from utils.model_utils import save_image, to_pil_image
+from src.utils.model_utils import save_image, to_pil_image
 
 
 class BaseMethod(ABC):
