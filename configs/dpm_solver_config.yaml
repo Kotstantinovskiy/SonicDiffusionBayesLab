@@ -21,7 +21,7 @@ quality_metrics:
 logger:
   wandb_enable: True
   project_name: "Sonic diffusion"
-  log_images_step: 2
+  log_images_step: 1
   save_images: True
   save_images_dir: "./data/generate_images/{experiment}/"
 inference:
