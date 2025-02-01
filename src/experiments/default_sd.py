@@ -63,5 +63,5 @@ class DefaultStableDiffusion(BaseMethod):
 
             self.logger.log_metrics_into_table(
                 metrics=self.metric_dict,
-                name_table=f"Inference steps: {steps}",
+                name_table="Default stable diffusion",
             )

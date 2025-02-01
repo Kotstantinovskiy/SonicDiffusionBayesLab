@@ -68,5 +68,5 @@ class DPMSolverMethod(BaseMethod):
 
             self.logger.log_metrics_into_table(
                 metrics=self.metric_dict,
-                name_table=f"Solver order: {self.solver_order}, Inference steps: {steps}",
+                name_table="DPM solver",
             )

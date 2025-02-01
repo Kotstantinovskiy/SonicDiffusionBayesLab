@@ -70,7 +70,7 @@ class DeepCacheMethod(BaseMethod):
 
                 self.logger.log_metrics_into_table(
                     metrics=self.metric_dict,
-                    name_table=f"Cache interval: {cache_interval}",
+                    name_table=f"Deep cache, Cache interval: {cache_interval}",
                 )
 
         helper.disable()

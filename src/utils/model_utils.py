@@ -1,10 +1,10 @@
+import os
 import random
 import time
 from functools import wraps
 
 import torch
 from torchvision import transforms
-import os
 
 
 def requires_grad(model, flag=True):
