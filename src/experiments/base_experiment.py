@@ -100,7 +100,7 @@ class BaseMethod(ABC):
             tqdm(
                 test_dataloader,
                 total=len(test_dataloader),
-                desc="DeepCache Experiment",
+                desc="Experiment",
             )
         ):
             image_file, real_images, prompts = (
