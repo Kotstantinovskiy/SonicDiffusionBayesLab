@@ -41,6 +41,7 @@ class DeepCacheMethod(BaseMethod):
             self.config.model.pretrained_model,
             safety_checker=None,
             requires_safety_checker=False,
+            torch_dtype=torch.float16,
         )
         self.model.to(self.device)
 
