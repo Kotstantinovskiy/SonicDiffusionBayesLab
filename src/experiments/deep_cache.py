@@ -30,22 +30,6 @@ class DeepCacheMethod(BaseMethod):
         self.cache_branch_id = config.experiment_params.get("cache_branch_id", 0)
         self.num_inference_steps = config.experiment_params.num_inference_steps
 
-    def _update_metric_dict(self, inference_step):
-        self.metric_dict["nfe"].append(inference_step)
-        self.metric_dict["clip_score_gen_image"].append(
-            self.clip_score_gen_metric.compute().item()
-        )
-        self.metric_dict["clip_score_real_image"].append(
-            self.clip_score_real_metric.compute().item()
-        )
-
-        self.metric_dict["image_reward"].append(
-            self.image_reward_metric.compute().item()
-        )
-
-        self.metric_dict["fid"].append(self.fid_metric.compute().item())
-        self.metric_dict["time_metric"].append(self.time_metric.compute().item())
-
     def run_experiment(self):
         batch_size = self.config.inference.get("batch_size", 1)
 
