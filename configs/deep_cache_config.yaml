@@ -23,7 +23,7 @@ logger:
   project_name: "Sonic diffusion"
   log_images_step: 1
   save_images: True
-  save_images_dir: "./data/generate_images/{experiment}/"
+  save_images_dir: "./data/generate_images/{experiment}/{args}/"
 inference:
   batch_size: 4
 experiment_params:

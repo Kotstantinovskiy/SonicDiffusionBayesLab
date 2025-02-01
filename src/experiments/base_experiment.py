@@ -158,7 +158,8 @@ class BaseMethod(ABC):
                 for image_file, gen_image in zip(image_files, gen_images.unbind(0)):
                     save_image(
                         self.config.logger.save_images_dir.format(
-                            experiment=self.config.experiment_name
+                            experiment=self.config.experiment_name,
+                            args=name_images,
                         ),
                         image_file,
                         to_pil_image(gen_image),
