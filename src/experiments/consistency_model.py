@@ -136,7 +136,11 @@ class ConsistencyModelMethod(BaseMethod):
                     desc="DeepCache Experiment",
                 )
             ):
-                real_images, prompts = batch["image"], batch["prompt"]
+                image_file, real_images, prompts = (
+                    batch["image_file"],
+                    batch["image"],
+                    batch["prompt"],
+                )
                 diffusion_gen_imgs, inference_time = self.model(
                     prompts,
                     num_inference_steps=steps,
@@ -167,7 +171,11 @@ class ConsistencyModelMethod(BaseMethod):
                 total=len(test_dataloader),
                 desc="Calculating metrics...",
             ):
-                real_images, prompts = input_batch["image"], input_batch["prompt"]
+                image_file, real_images, prompts = (
+                    batch["image_file"],
+                    batch["image"],
+                    batch["prompt"],
+                )
                 real_images = (real_images * 255).to(torch.uint8).cpu()
                 gen_images = (gen_images * 255).to(torch.uint8).cpu()
 

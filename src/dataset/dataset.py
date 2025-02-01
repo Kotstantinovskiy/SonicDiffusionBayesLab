@@ -38,4 +38,4 @@ class ImageDatasetWithPrompts(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        return {"image": image, "prompt": text_prompt}
+        return {"image_file": image_file, "image": image, "prompt": text_prompt}

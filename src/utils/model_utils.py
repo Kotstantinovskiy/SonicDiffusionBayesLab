@@ -4,6 +4,7 @@ from functools import wraps
 
 import torch
 from torchvision import transforms
+import os
 
 
 def requires_grad(model, flag=True):
@@ -18,6 +19,13 @@ def setup_seed(seed):
 
 def to_pil_image(tensor):
     return transforms.ToPILImage()(tensor)
+
+
+def save_image(image_dir, image_name, image):
+    if not os.path.exists(image_dir):
+        os.makedirs(image_dir)
+
+    image.save(f"{image_dir}/{image_name}")
 
 
 def time_it(func):
