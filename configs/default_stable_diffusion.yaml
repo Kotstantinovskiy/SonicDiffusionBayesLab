@@ -27,4 +27,4 @@ logger:
 inference:
   batch_size: 32
 experiment_params:
-  num_inference_steps: [10, 50, 100]
+  num_inference_steps: [5, 10, 100, 500, 1000]

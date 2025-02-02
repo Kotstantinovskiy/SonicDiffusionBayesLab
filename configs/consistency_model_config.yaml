@@ -29,4 +29,4 @@ inference:
 experiment_params:
   adapter_id: "latent-consistency/lcm-lora-sdv1-5"
   guidance_scale: 0
-  num_inference_steps: [5, 10, 20, 50]
+  num_inference_steps: [1, 2, 3, 4, 5, 10, 50]

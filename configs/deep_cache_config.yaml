@@ -27,6 +27,6 @@ logger:
 inference:
   batch_size: 4
 experiment_params:
-  cache_interval: [2]
+  cache_interval: [2, 5]
   cache_branch_id: 0
-  num_inference_steps: [10, 50, 100]
+  num_inference_steps: [5, 10, 100, 500, 100]

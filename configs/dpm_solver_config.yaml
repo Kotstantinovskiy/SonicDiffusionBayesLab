@@ -30,5 +30,4 @@ experiment_params:
   algorithm_type: 'dpmsolver'
   final_sigmas_type: "sigma_min"
   solver_order: 2
-  num_train_timesteps: 1000
-  num_inference_steps: [5, 10, 20]
+  num_inference_steps: [1, 2, 3, 4, 5, 10, 50]
