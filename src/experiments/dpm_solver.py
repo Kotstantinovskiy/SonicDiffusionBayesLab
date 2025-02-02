@@ -28,7 +28,6 @@ class DPMSolverMethod(BaseMethod):
 
         self.algorithm_type = config.experiment_params.algorithm_type
         self.num_inference_steps = config.experiment_params.num_inference_steps
-        self.num_train_timesteps = config.experiment_params.num_train_timesteps
         self.solver_order = config.experiment_params.solver_order
         self.final_sigmas_type = config.experiment_params.final_sigmas_type
 
