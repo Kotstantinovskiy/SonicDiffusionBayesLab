@@ -1,14 +1,10 @@
 from collections import defaultdict
 
 import torch
-from omegaconf import OmegaConf
 from torch.utils.data import DataLoader
-from torchvision import transforms
-from tqdm import tqdm
 
-from src.dataset.dataset import ImageDatasetWithPrompts
 from src.experiments.base_experiment import BaseMethod
-from src.registry import methods_registry, models_registry
+from src.registry import methods_registry
 
 
 @methods_registry.add_to_registry("default")
