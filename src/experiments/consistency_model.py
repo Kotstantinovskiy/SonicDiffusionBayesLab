@@ -29,7 +29,7 @@ class ConsistencyModelMethod(BaseMethod):
         self.num_inference_steps = config.experiment_params.num_inference_steps
 
     def run_experiment(self):
-        self.model.scheduler = LCMScheduler.from_config(self.pipe.scheduler.config)
+        self.model.scheduler = LCMScheduler.from_config(self.model.scheduler.config)
 
         self.model.load_lora_weights(self.config.experiment_params.adapter_id)
         self.model.fuse_lora()
