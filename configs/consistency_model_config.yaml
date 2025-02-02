@@ -4,7 +4,7 @@ experiment:
   seed: 29
 model:
   model_name: "stable_diffusion_model"
-  pretrained_model: "runwayml/stable-diffusion-v1-5"
+  pretrained_model: "Lykon/dreamshaper-7"
 dataset:
   img_dataset: "./data/dataset/test/"
   prompts: "./data/dataset/img2annotations_test.json"
@@ -27,5 +27,5 @@ logger:
 inference:
   batch_size: 32
 experiment_params:
-  num_train_timesteps: 1000
-  num_inference_steps: [5, 10, 20, 50, 100]
+  adapter_id: "latent-consistency/lcm-lora-sdv1-5"
+  num_inference_steps: [5, 10, 20, 50]
