@@ -62,9 +62,9 @@ class ConsistencyModelMethod(BaseMethod):
                 test_dataloader,
                 gen_dataloader,
                 name_images=f"Inference steps: {steps}",
+                name_table="Consistency model",
+                inference_step=steps,
             )
-
-            self._update_metric_dict(steps)
 
             self.logger.log_metrics_into_table(
                 metrics=self.metric_dict,

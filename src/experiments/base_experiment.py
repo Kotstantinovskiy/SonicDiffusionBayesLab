@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
 
+import pandas as pd
 import torch
 from omegaconf import OmegaConf
 from torchvision import transforms
@@ -9,7 +10,7 @@ from tqdm import tqdm
 from src.dataset.dataset import ImageDatasetWithPrompts
 from src.loggers.wandb import Logger
 from src.registry import metrics_registry, models_registry
-from src.utils.model_utils import save_image, to_pil_image
+from src.utils.model_utils import save_image, save_table, to_pil_image
 
 
 class BaseMethod(ABC):
@@ -127,7 +128,9 @@ class BaseMethod(ABC):
 
         return gen_images_list
 
-    def validate(self, test_dataloader, gen_dataloader, name_images):
+    def validate(
+        self, test_dataloader, gen_dataloader, name_images, name_table, inference_step
+    ):
         for idx, (input_batch, gen_images) in tqdm(
             enumerate(zip(test_dataloader, gen_dataloader)),
             total=len(test_dataloader),
@@ -155,10 +158,10 @@ class BaseMethod(ABC):
                     name_images=name_images,
                 )
 
-            if self.config.logger.save_images:
+            if self.config.logger.save:
                 for image_file, gen_image in zip(image_files, gen_images.unbind(0)):
                     save_image(
-                        self.config.logger.save_images_dir.format(
+                        self.config.logger.save_dir.format(
                             experiment=self.config.experiment_name,
                             args=name_images,
                         ),
@@ -166,7 +169,15 @@ class BaseMethod(ABC):
                         to_pil_image(gen_image),
                     )
 
-    def _update_metric_dict(self, inference_step):
+                save_table(
+                    self.config.logger.save_dir.format(
+                        experiment=self.config.experiment_name,
+                        args=name_images,
+                    ),
+                    "metrics",
+                    pd.DataFrame.from_dict(self.metric_dict, orient="columns"),
+                )
+
         self.metric_dict["nfe"].append(inference_step)
         self.metric_dict["clip_score_gen_image"].append(
             self.clip_score_gen_metric.compute().item()
@@ -181,3 +192,8 @@ class BaseMethod(ABC):
 
         self.metric_dict["fid"].append(self.fid_metric.compute().item())
         self.metric_dict["time_metric"].append(self.time_metric.compute().item())
+
+        self.logger.log_metrics_into_table(
+            metrics=self.metric_dict,
+            name_table=name_table,
+        )

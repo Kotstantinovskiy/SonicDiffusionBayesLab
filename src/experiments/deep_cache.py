@@ -64,13 +64,8 @@ class DeepCacheMethod(BaseMethod):
                     test_dataloader,
                     gen_dataloader,
                     name_images=f"Inference steps: {steps}, Cache interval: {cache_interval}",
-                )
-
-                self._update_metric_dict(steps)
-
-                self.logger.log_metrics_into_table(
-                    metrics=self.metric_dict,
                     name_table=f"Deep cache, Cache interval: {cache_interval}",
+                    inference_step=steps,
                 )
 
         helper.disable()

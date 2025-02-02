@@ -22,8 +22,8 @@ logger:
   wandb_enable: True
   project_name: "Sonic diffusion"
   log_images_step: 1
-  save_images: True
-  save_images_dir: "./data/generate_images/{experiment}/{args}/"
+  save: True
+  save_dir: "./data/generate_images/{experiment}/{args}/"
 inference:
   batch_size: 32
 experiment_params:

@@ -62,11 +62,6 @@ class DPMSolverMethod(BaseMethod):
                 test_dataloader,
                 gen_dataloader,
                 name_images=f"Solver order: {self.solver_order}, Inference steps: {steps}",
-            )
-
-            self._update_metric_dict(steps)
-
-            self.logger.log_metrics_into_table(
-                metrics=self.metric_dict,
-                name_table="DPM solver",
+                name_table="DPM Solver",
+                inference_step=steps,
             )

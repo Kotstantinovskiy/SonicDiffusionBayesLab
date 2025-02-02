@@ -23,9 +23,19 @@ def to_pil_image(tensor):
 
 def save_image(image_dir, image_name, image):
     if not os.path.exists(image_dir):
-        os.makedirs(image_dir)
+        os.makedirs(f"{image_dir}/images/")
 
-    image.save(f"{image_dir}/{image_name.split('.')[0]}.png")
+    image.save(f"{image_dir}/images/{image_name.split('.')[0]}.png")
+
+
+def save_table(table_dir, table_name, table):
+    if not os.path.exists(table_dir):
+        os.makedirs(table_dir)
+
+    table.to_csv(
+        f"{table_dir}/{table_name}.csv",
+        index=None,
+    )
 
 
 def time_it(func):

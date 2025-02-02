@@ -53,11 +53,6 @@ class DefaultStableDiffusion(BaseMethod):
                 test_dataloader,
                 gen_dataloader,
                 name_images=f"Inference steps: {steps}",
-            )
-
-            self._update_metric_dict(steps)
-
-            self.logger.log_metrics_into_table(
-                metrics=self.metric_dict,
                 name_table="Default stable diffusion",
+                inference_step=steps,
             )
