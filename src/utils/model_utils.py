@@ -33,8 +33,9 @@ def save_table(table_dir, table_name, table):
         os.makedirs(table_dir)
 
     table.to_csv(
-        f"{table_dir}/{table_name}.csv",
+        f"{table_dir}/{table_name}.tsv",
         index=None,
+        sep="\t",
     )
 
 

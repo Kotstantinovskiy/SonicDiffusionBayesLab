@@ -169,15 +169,6 @@ class BaseMethod(ABC):
                         to_pil_image(gen_image),
                     )
 
-                save_table(
-                    self.config.logger.save_dir.format(
-                        experiment=self.config.experiment_name,
-                        args=name_images,
-                    ),
-                    "metrics",
-                    pd.DataFrame.from_dict(self.metric_dict, orient="columns"),
-                )
-
         self.metric_dict["nfe"].append(inference_step)
         self.metric_dict["clip_score_gen_image"].append(
             self.clip_score_gen_metric.compute().item()
@@ -192,6 +183,16 @@ class BaseMethod(ABC):
 
         self.metric_dict["fid"].append(self.fid_metric.compute().item())
         self.metric_dict["time_metric"].append(self.time_metric.compute().item())
+
+        if self.config.logger.save:
+            save_table(
+                self.config.logger.save_dir.format(
+                    experiment=self.config.experiment_name,
+                    args=name_images,
+                ),
+                "metrics",
+                pd.DataFrame.from_dict(self.metric_dict, orient="columns"),
+            )
 
         self.logger.log_metrics_into_table(
             metrics=self.metric_dict,
