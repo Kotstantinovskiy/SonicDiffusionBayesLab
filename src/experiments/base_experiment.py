@@ -94,7 +94,7 @@ class BaseMethod(ABC):
             run_id=self.config.logger.get("run_id", None),
         )
 
-    def generate(self, test_dataloader, steps, batch_size=1):
+    def generate(self, test_dataloader, steps, batch_size=1, guidance_scale=7.5):
         gen_images_list: list = []
         for idx, batch in enumerate(
             tqdm(
@@ -111,6 +111,7 @@ class BaseMethod(ABC):
             diffusion_gen_imgs, inference_time = self.model(
                 prompts,
                 num_inference_steps=steps,
+                guidance_scale=guidance_scale,
                 output_type="pt",
             )
             diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
