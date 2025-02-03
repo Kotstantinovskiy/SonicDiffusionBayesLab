@@ -68,4 +68,4 @@ class DeepCacheMethod(BaseMethod):
                     inference_step=steps,
                 )
 
-        helper.disable()
+            helper.disable()
