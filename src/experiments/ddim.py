@@ -8,8 +8,8 @@ from src.experiments.base_experiment import BaseMethod
 from src.registry import methods_registry
 
 
-@methods_registry.add_to_registry("dpm_solver")
-class DPMSolverMethod(BaseMethod):
+@methods_registry.add_to_registry("ddim")
+class DDIMMethod(BaseMethod):
     def __init__(self, config):
         self.config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
