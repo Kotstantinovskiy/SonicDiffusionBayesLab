@@ -1,0 +1,30 @@
+experiment_name: "DDIM"
+experiment:
+  method: "ddim"
+  seed: 29
+model:
+  model_name: "stable_diffusion_model"
+  pretrained_model: "runwayml/stable-diffusion-v1-5"
+dataset:
+  img_dataset: "./data/dataset/test/"
+  prompts: "./data/dataset/img2annotations_test.json"
+  image_size: 512
+quality_metrics:
+  clip_score:
+    model_name_or_path: "openai/clip-vit-base-patch16"
+  image_reward:
+    model_name: "ImageReward-v1.0"
+  fid:
+    feature: 64
+    input_img_size: 512
+    normalize: False
+logger:
+  wandb_enable: True
+  project_name: "Sonic diffusion"
+  log_images_step: 1
+  save: True
+  save_dir: "./data/generate_images/{experiment}/{args}/"
+inference:
+  batch_size: 32
+experiment_params:
+  num_inference_steps: [1, 2, 3, 4, 5, 10, 50, 100]
