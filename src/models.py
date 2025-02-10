@@ -254,11 +254,17 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     )
 
                 # compute the previous noisy sample x_t -> x_t-1
-                print(self.scheduler.step(
-                    noise_pred, t, latents, **extra_step_kwargs, return_dict=False
-                ))
-                latents, original_sample = self.scheduler.step(
-                    noise_pred, t, latents, **extra_step_kwargs, return_dict=False
+                print(
+                    self.scheduler.step(
+                        noise_pred, t, latents, **extra_step_kwargs, return_dict=True
+                    )
+                )
+                output = self.scheduler.step(
+                    noise_pred, t, latents, **extra_step_kwargs, return_dict=True
+                )
+                latents, original_sample = (
+                    output.prev_sample,
+                    output.pred_original_sample.detach().cpu(),
                 )
                 original_samples.append(original_sample.detach().cpu())
 
