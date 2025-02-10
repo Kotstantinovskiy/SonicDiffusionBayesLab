@@ -6,12 +6,11 @@ from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
 from diffusers.pipelines.stable_diffusion import StableDiffusionPipelineOutput
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion import (
-    EXAMPLE_DOC_STRING,
     StableDiffusionPipeline,
     rescale_noise_cfg,
     retrieve_timesteps,
 )
-from diffusers.utils import deprecate, replace_example_docstring
+from diffusers.utils import deprecate
 
 from src.registry import models_registry
 
@@ -20,7 +19,7 @@ from src.registry import models_registry
 class StableDiffusionModel(StableDiffusionPipeline):
     def __call__(
         self, *args, return_execution_time=True, return_original_samples=True, **kwargs
-    ):  
+    ):
         start_time = time.time()
         result, original_samples = self.call(*args, **kwargs)
         end_time = time.time()
