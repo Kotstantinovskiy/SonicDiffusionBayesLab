@@ -11,15 +11,13 @@ from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion import (
     retrieve_timesteps,
 )
 from diffusers.utils import deprecate
+from diffusers.configuration_utils import FrozenDict
 
 from src.registry import models_registry
 
 
 @models_registry.add_to_registry("stable_diffusion_model")
 class StableDiffusionModel(StableDiffusionPipeline):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def __call__(
         self, *args, return_execution_time=True, return_original_samples=True, **kwargs
     ):
@@ -94,13 +92,13 @@ class StableDiffusionModel(StableDiffusionPipeline):
         if not height or not width:
             height = (
                 self.unet.config.sample_size
-                if self._is_unet_config_sample_size_int
-                else self.unet.config.sample_size[0]
+                # if self._is_unet_config_sample_size_int
+                # else self.unet.config.sample_size[0]
             )
             width = (
                 self.unet.config.sample_size
-                if self._is_unet_config_sample_size_int
-                else self.unet.config.sample_size[1]
+                # if self._is_unet_config_sample_size_int
+                # else self.unet.config.sample_size[1]
             )
             height, width = (
                 height * self.vae_scale_factor,
