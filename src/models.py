@@ -17,6 +17,9 @@ from src.registry import models_registry
 
 @models_registry.add_to_registry("stable_diffusion_model")
 class StableDiffusionModel(StableDiffusionPipeline):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def __call__(
         self, *args, return_execution_time=True, return_original_samples=True, **kwargs
     ):
