@@ -44,10 +44,10 @@ class TwoSchedulerMethod(BaseMethod):
     def setup_scheduler(self):
         scheduler_first_name = self.config.scheduler.scheduler_first
         scheduler_second_name = self.config.scheduler.scheduler_second
-        self.model.schedluer_first = schedulers_registry[
+        self.model.scheduler_first = schedulers_registry[
             scheduler_first_name
         ].from_config(self.model.scheduler.config)
-        self.model.schedluer_second = schedulers_registry[
+        self.model.scheduler_second = schedulers_registry[
             scheduler_second_name
         ].from_config(self.model.scheduler.config)
 
