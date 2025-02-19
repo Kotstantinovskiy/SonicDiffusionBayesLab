@@ -17,6 +17,9 @@ class DPMSolverMethod(BaseMethod):
         # setup model
         self.setup_model()
 
+        # setup schedulers
+        self.setup_scheduler()
+
         # setup datasets
         self.setup_dataset()
 
@@ -26,15 +29,13 @@ class DPMSolverMethod(BaseMethod):
         # loggers
         self.setup_loggers()
 
-        self.algorithm_type = config.experiment_params.algorithm_type
         self.num_inference_steps = config.experiment_params.num_inference_steps
         self.solver_order = config.experiment_params.solver_order
-        self.final_sigmas_type = config.experiment_params.final_sigmas_type
 
     def run_experiment(self):
-        self.model.scheduler = DPMSolverMultistepScheduler.from_config(
-            self.model.scheduler.config,
-        )
+        # self.model.scheduler = DPMSolverMultistepScheduler.from_config(
+        #    self.model.scheduler.config,
+        # )
 
         batch_size = self.config.inference.get("batch_size", 1)
 

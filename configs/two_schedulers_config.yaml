@@ -1,12 +1,13 @@
 experiment_name: "DPM solver"
 experiment:
-  method: "dpm_solver"
+  method: "DPM and DDIM"
   seed: 29
 model:
-  model_name: "stable_diffusion_model"
+  model_name: "stable_diffusion_model_two_schedulers"
   pretrained_model: "runwayml/stable-diffusion-v1-5"
 scheduler:
-  scheduler_name: "dpm_solver_scheduler"
+  scheduler_first: "dpm_solver_scheduler"
+  scheduler_second: "ddim_scheduler"
 dataset:
   img_dataset: "./data/dataset/test/"
   prompts: "./data/dataset/img2annotations_test.json"
@@ -30,4 +31,6 @@ inference:
   batch_size: 32
 experiment_params:
   solver_order: 2
-  num_inference_steps: [1, 2, 3, 4, 5, 10, 50]
+  num_inference_steps_first: [10, 20, 30]
+  num_inference_steps_second: [10, 20, 30]
+  num_step_switch: [5, 5]

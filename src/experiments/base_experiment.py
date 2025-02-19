@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from src.dataset.dataset import ImageDatasetWithPrompts
 from src.loggers.wandb import Logger
-from src.registry import metrics_registry, models_registry
+from src.registry import metrics_registry, models_registry, schedulers_registry
 from src.utils.model_utils import save_image, save_table, to_pil_image
 
 
@@ -20,6 +20,9 @@ class BaseMethod(ABC):
 
         # setup model
         self.setup_model()
+
+        # setup schedulers
+        self.setup_scheduler()
 
         # setup datasets
         self.setup_dataset()
@@ -43,6 +46,12 @@ class BaseMethod(ABC):
             torch_dtype=torch.float16,
         )
         self.model.to(self.device)
+
+    def setup_scheduler(self):
+        scheduler_name = self.config.scheduler.scheduler_name
+        self.model.schedluers = schedulers_registry[scheduler_name].from_config(
+            self.model.scheduler.config
+        )
 
     def setup_dataset(self):
         self.dataset_test_dir = self.config.dataset.img_dataset
@@ -129,7 +138,11 @@ class BaseMethod(ABC):
         return gen_images_list
 
     def validate(
-        self, test_dataloader, gen_dataloader, name_images, name_table, inference_step
+        self,
+        test_dataloader,
+        gen_dataloader,
+        name_images,
+        name_table,
     ):
         for idx, (input_batch, gen_images) in tqdm(
             enumerate(zip(test_dataloader, gen_dataloader)),
@@ -169,7 +182,7 @@ class BaseMethod(ABC):
                         to_pil_image(gen_image),
                     )
 
-        self.metric_dict["nfe"].append(inference_step)
+        self.metric_dict["nfe"].append(self.model.num_timesteps)
         self.metric_dict["clip_score_gen_image"].append(
             self.clip_score_gen_metric.compute().item()
         )

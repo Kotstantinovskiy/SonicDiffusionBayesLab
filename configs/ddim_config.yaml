@@ -5,6 +5,8 @@ experiment:
 model:
   model_name: "stable_diffusion_model"
   pretrained_model: "runwayml/stable-diffusion-v1-5"
+scheduler:
+  scheduler_name: "ddim_scheduler"
 dataset:
   img_dataset: "./data/dataset/test/"
   prompts: "./data/dataset/img2annotations_test.json"

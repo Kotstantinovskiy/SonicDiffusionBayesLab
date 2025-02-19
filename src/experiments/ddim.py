@@ -17,6 +17,9 @@ class DDIMMethod(BaseMethod):
         # setup model
         self.setup_model()
 
+        # setup schedulers
+        self.setup_scheduler()
+
         # setup datasets
         self.setup_dataset()
 
@@ -29,9 +32,9 @@ class DDIMMethod(BaseMethod):
         self.num_inference_steps = config.experiment_params.num_inference_steps
 
     def run_experiment(self):
-        self.model.scheduler = DDIMScheduler.from_config(
-            self.model.scheduler.config,
-        )
+        # self.model.scheduler = DDIMScheduler.from_config(
+        #    self.model.scheduler.config,
+        # )
 
         batch_size = self.config.inference.get("batch_size", 1)
 

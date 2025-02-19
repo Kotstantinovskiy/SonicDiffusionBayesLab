@@ -1,6 +1,7 @@
 import time
 from typing import Any, Callable, Dict, List, Optional, Union
 
+import numpy as np
 import torch
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
@@ -11,27 +12,34 @@ from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion import (
     retrieve_timesteps,
 )
 from diffusers.utils import deprecate
-from diffusers.configuration_utils import FrozenDict
 
 from src.registry import models_registry
 
 
 @models_registry.add_to_registry("stable_diffusion_model")
 class StableDiffusionModel(StableDiffusionPipeline):
-    def __call__(
-        self, *args, return_execution_time=True, return_original_samples=True, **kwargs
-    ):
+    def __call__(self, *args, return_execution_time=True, **kwargs):
         start_time = time.time()
-        result, original_samples = self.call(*args, **kwargs)
+        result = self.call(*args, **kwargs)
         end_time = time.time()
         execution_time = end_time - start_time
 
-        if return_execution_time and return_original_samples:
-            return result, original_samples, execution_time
-        elif return_execution_time:
+        if return_execution_time:
             return result, execution_time
-        elif return_original_samples:
-            return result, original_samples
+
+        return result
+
+
+@models_registry.add_to_registry("stable_diffusion_model_two_schedulers")
+class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
+    def __call__(self, *args, return_execution_time=True, **kwargs):
+        start_time = time.time()
+        result = self.call(*args, **kwargs)
+        end_time = time.time()
+        execution_time = end_time - start_time
+
+        if return_execution_time:
+            return result, execution_time
 
         return result
 
@@ -41,7 +49,9 @@ class StableDiffusionModel(StableDiffusionPipeline):
         prompt: Union[str, List[str]] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
-        num_inference_steps: int = 50,
+        num_inference_steps_first: int = 50,
+        num_inference_steps_second: int = 50,
+        num_step_switch: int = 10,
         timesteps: List[int] = None,
         sigmas: List[float] = None,
         guidance_scale: float = 7.5,
@@ -171,9 +181,17 @@ class StableDiffusionModel(StableDiffusionPipeline):
             )
 
         # 4. Prepare timesteps
-        timesteps, num_inference_steps = retrieve_timesteps(
-            self.scheduler, num_inference_steps, device, timesteps, sigmas
+        timesteps_first, num_inference_steps_first = retrieve_timesteps(
+            self.scheduler_first, num_inference_steps_first, device, timesteps, sigmas
         )
+        timesteps_second, num_inference_steps_second = retrieve_timesteps(
+            self.scheduler_second, num_inference_steps_second, device, timesteps, sigmas
+        )
+
+        # Choose switch timestamp
+        timesteps_first = list(timesteps_first[:num_step_switch].cpu().numpy())
+        mins = [abs(timestep - timesteps_first[0]) for timestep in timesteps_second]
+        timesteps_second = list(timesteps_second[np.argmin(mins) :].cpu().numpy())
 
         # 5. Prepare latent variables
         num_channels_latents = self.unet.config.in_channels
@@ -209,11 +227,12 @@ class StableDiffusionModel(StableDiffusionPipeline):
             ).to(device=device, dtype=latents.dtype)
 
         # 7. Denoising loop
-        original_samples: list = []
-        num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
-        self._num_timesteps = len(timesteps)
-        with self.progress_bar(total=num_inference_steps) as progress_bar:
-            for i, t in enumerate(timesteps):
+        # num_warmup_steps_first = len(timesteps_first) - num_inference_steps_first * self.scheduler_first.order
+        # num_warmup_steps_second = len(timesteps_second) - num_inference_steps_second * self.scheduler_second.order
+
+        self._num_timesteps = len(timesteps_first) + len(timesteps_second)
+        with self.progress_bar(total=self._num_timesteps) as progress_bar:
+            for i, t in enumerate(timesteps_first + timesteps_second):
                 if self.interrupt:
                     continue
 
@@ -223,9 +242,15 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     if self.do_classifier_free_guidance
                     else latents
                 )
-                latent_model_input = self.scheduler.scale_model_input(
-                    latent_model_input, t
-                )
+
+                if i < len(timesteps_first):
+                    latent_model_input = self.scheduler_first.scale_model_input(
+                        latent_model_input, t
+                    )
+                else:
+                    latent_model_input = self.scheduler_second.scale_model_input(
+                        latent_model_input, t
+                    )
 
                 # predict the noise residual
                 noise_pred = self.unet(
@@ -254,14 +279,19 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     )
 
                 # compute the previous noisy sample x_t -> x_t-1
-                output = self.scheduler.step(
-                    noise_pred, t, latents, **extra_step_kwargs, return_dict=True
-                )
-                latents, original_sample = (
+                if i < len(timesteps_first):
+                    output = self.scheduler_first.step(
+                        noise_pred, t, latents, **extra_step_kwargs, return_dict=True
+                    )
+                else:
+                    output = self.scheduler_second.step(
+                        noise_pred, t, latents, **extra_step_kwargs, return_dict=True
+                    )
+
+                latents = (
                     output.prev_sample,
                     output.pred_original_sample.detach().cpu(),
                 )
-                original_samples.append(original_sample.detach().cpu())
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -276,6 +306,10 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     )
 
                 # call the callback, if provided
+                if i == self._num_timesteps - 1 or (i + 1) % self.scheduler.order == 0:
+                    progress_bar.update()
+
+                """
                 if i == len(timesteps) - 1 or (
                     (i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0
                 ):
@@ -283,6 +317,7 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     if callback is not None and i % callback_steps == 0:
                         step_idx = i // getattr(self.scheduler, "order", 1)
                         callback(step_idx, t, latents)
+                """
 
         if not output_type == "latent":
             image = self.vae.decode(
@@ -309,8 +344,8 @@ class StableDiffusionModel(StableDiffusionPipeline):
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return image, has_nsfw_concept, original_samples
+            return image, has_nsfw_concept
 
         return StableDiffusionPipelineOutput(
             images=image, nsfw_content_detected=has_nsfw_concept
-        ), original_samples
+        )

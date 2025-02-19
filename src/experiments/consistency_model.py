@@ -17,6 +17,9 @@ class ConsistencyModelMethod(BaseMethod):
         # setup model
         self.setup_model()
 
+        # setup schedulers
+        self.setup_scheduler()
+
         # setup datasets
         self.setup_dataset()
 
@@ -30,7 +33,7 @@ class ConsistencyModelMethod(BaseMethod):
         self.guidance_scale = self.config.experiment_params.guidance_scale
 
     def run_experiment(self):
-        self.model.scheduler = LCMScheduler.from_config(self.model.scheduler.config)
+        # self.model.scheduler = LCMScheduler.from_config(self.model.scheduler.config)
 
         self.model.load_lora_weights(self.config.experiment_params.adapter_id)
         self.model.fuse_lora()
