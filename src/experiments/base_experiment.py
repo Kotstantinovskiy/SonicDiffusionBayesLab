@@ -18,6 +18,9 @@ class BaseMethod(ABC):
         self.config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        # setup generator
+        self.setup_generator()
+
         # setup model
         self.setup_model()
 
@@ -36,6 +39,10 @@ class BaseMethod(ABC):
     @abstractmethod
     def run_experiment(self):
         pass
+
+    def setup_generator(self):
+        self.generator = torch.Generator(device=self.device)
+        self.generator.manual_seed(self.config.experiment.seed)
 
     def setup_model(self):
         model_name = self.config.model.model_name
@@ -122,6 +129,7 @@ class BaseMethod(ABC):
                 prompts,
                 num_inference_steps=steps,
                 guidance_scale=guidance_scale,
+                generator=self.generator,
                 output_type="pt",
             )
             diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()

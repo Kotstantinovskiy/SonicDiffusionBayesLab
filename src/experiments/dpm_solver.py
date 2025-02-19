@@ -14,6 +14,9 @@ class DPMSolverMethod(BaseMethod):
         self.config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        # setup generator
+        self.setup_generator()
+
         # setup model
         self.setup_model()
 

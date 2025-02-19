@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 import torch
-from diffusers import LCMScheduler
 from torch.utils.data import DataLoader
 
 from src.experiments.base_experiment import BaseMethod
@@ -13,6 +12,9 @@ class ConsistencyModelMethod(BaseMethod):
     def __init__(self, config):
         self.config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        # setup generator
+        self.setup_generator()
 
         # setup model
         self.setup_model()

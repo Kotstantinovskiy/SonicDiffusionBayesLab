@@ -14,6 +14,9 @@ class TwoSchedulerMethod(BaseMethod):
         self.config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        # setup generator
+        self.setup_generator()
+
         # setup model
         self.setup_model()
 
@@ -73,6 +76,7 @@ class TwoSchedulerMethod(BaseMethod):
             diffusion_gen_imgs, inference_time = self.model(
                 prompts,
                 guidance_scale=guidance_scale,
+                generator=self.generator,
                 num_inference_steps_first=num_inference_steps_first,
                 num_inference_steps_second=num_inference_steps_second,
                 num_step_switch=num_step_switch,
