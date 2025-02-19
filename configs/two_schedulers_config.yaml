@@ -33,4 +33,4 @@ experiment_params:
   solver_order: 2
   num_inference_steps_first: [10, 20, 30]
   num_inference_steps_second: [10, 20, 30]
-  num_step_switch: [5, 5]
+  num_step_switch: [5, 5, 5]
