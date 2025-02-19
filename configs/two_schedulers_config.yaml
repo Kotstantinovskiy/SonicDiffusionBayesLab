@@ -1,6 +1,6 @@
-experiment_name: "DPM solver"
+experiment_name: "DPM and DDIM"
 experiment:
-  method: "DPM and DDIM"
+  method: "two_schedulers"
   seed: 29
 model:
   model_name: "stable_diffusion_model_two_schedulers"
