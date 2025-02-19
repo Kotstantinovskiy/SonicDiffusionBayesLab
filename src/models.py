@@ -190,7 +190,9 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
 
         # Choose switch timestamp
         timesteps_first = list(timesteps_first[:num_step_switch].cpu().numpy())
-        mins = [abs(timestep - timesteps_first[0]) for timestep in timesteps_second]
+        mins = [
+            abs(timestep - timesteps_first[0]) for timestep in timesteps_second.cpu()
+        ]
         timesteps_second = list(timesteps_second[np.argmin(mins) :].cpu().numpy())
 
         # 5. Prepare latent variables
