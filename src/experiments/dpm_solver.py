@@ -41,7 +41,7 @@ class DPMSolverMethod(BaseMethod):
             self.validate(
                 test_dataloader,
                 gen_dataloader,
-                name_images=f"Solver order: {self.solver_order}, Inference steps: {steps}",
-                name_table="DPM Solver",
+                name_images=f"{self.config.experiment_name}, Solver order: {self.solver_order}, Inference steps: {steps}",
+                name_table=f"{self.config.experiment_name}",
                 inference_step=steps,
             )

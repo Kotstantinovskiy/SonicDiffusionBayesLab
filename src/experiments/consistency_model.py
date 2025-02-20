@@ -47,12 +47,7 @@ class ConsistencyModelMethod(BaseMethod):
             self.validate(
                 test_dataloader,
                 gen_dataloader,
-                name_images=f"Inference steps: {steps}",
-                name_table="Consistency model",
+                name_images=f"{self.config.experiment_name}, Inference steps: {steps}",
+                name_table=f"{self.config.experiment_name}",
                 inference_step=steps,
-            )
-
-            self.logger.log_metrics_into_table(
-                metrics=self.metric_dict,
-                name_table="Consistency model",
             )

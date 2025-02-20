@@ -50,9 +50,10 @@ class DeepCacheMethod(BaseMethod):
                 self.validate(
                     test_dataloader,
                     gen_dataloader,
-                    name_images=f"Inference steps: {steps}, Cache interval: {cache_interval}",
-                    name_table=f"Deep cache, Cache interval: {cache_interval}",
+                    name_images=f"{self.config.experiment_name}, Inference steps: {steps}, Cache interval: {cache_interval}",
+                    name_table=f"{self.config.experiment_name}",
                     inference_step=steps,
+                    additional_values={"Cache interval": cache_interval},
                 )
 
             helper.disable()

@@ -122,7 +122,7 @@ class TwoSchedulerMethod(BaseMethod):
                 test_dataloader,
                 gen_dataloader,
                 name_images=f"{self.config.experiment_name}, Step first: {num_inference_steps_first}, Step second: {num_inference_steps_second}, Switch: {num_step_switch}",
-                name_table="DPM and DDIM",
+                name_table=f"{self.config.experiment_name}",
                 additional_values={
                     "num_inference_steps_first": num_inference_steps_first,
                     "num_inference_steps_second": num_inference_steps_second,
