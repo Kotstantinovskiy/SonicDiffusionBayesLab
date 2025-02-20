@@ -32,6 +32,6 @@ inference:
 experiment_params:
   solver_order: 2
   type_switch: 'closest'
-  num_inference_steps_first: [10, 20, 30]
-  num_inference_steps_second: [10, 20, 30]
-  num_step_switch: [5, 5, 5]
+  num_inference_steps_first: [10, 10, 20, 20, 30, 30]
+  num_inference_steps_second: [10, 10, 20, 20, 30, 30]
+  num_step_switch: [3, 5, 5, 10, 5, 10]
