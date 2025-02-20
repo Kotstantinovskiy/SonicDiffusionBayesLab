@@ -1,4 +1,4 @@
-experiment_name: "DPM and DDIM"
+experiment_name: "DDIM to DPM"
 experiment:
   method: "two_schedulers"
   seed: 29
