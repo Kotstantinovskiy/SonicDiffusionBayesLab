@@ -52,6 +52,7 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
         num_inference_steps_first: int = 50,
         num_inference_steps_second: int = 50,
         num_step_switch: int = 10,
+        type_switch: str = "closest",
         timesteps: List[int] = None,
         sigmas: List[float] = None,
         guidance_scale: float = 7.5,
@@ -189,11 +190,12 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
         )
 
         # Choose switch timestamp
-        timesteps_first = list(timesteps_first[:num_step_switch].cpu().numpy())
-        mins = [
-            abs(timestep - timesteps_first[0]) for timestep in timesteps_second.cpu()
-        ]
-        timesteps_second = list(timesteps_second[np.argmin(mins) :].cpu().numpy())
+        timesteps_first, timesteps_second = self.switch_timestamp(
+            timesteps_first=timesteps_first,
+            timesteps_second=timesteps_second,
+            num_step_switch=num_step_switch,
+            type_switch=type_switch,
+        )
 
         # 5. Prepare latent variables
         num_channels_latents = self.unet.config.in_channels
@@ -346,3 +348,31 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
         return StableDiffusionPipelineOutput(
             images=image, nsfw_content_detected=has_nsfw_concept
         )
+
+    def switch_timestamp(
+        self, timesteps_first, timesteps_second, num_step_switch, type_switch="closest"
+    ):
+        timesteps_first = list(timesteps_first[:num_step_switch].cpu().numpy())
+
+        if type_switch == "closest":
+            dist = [
+                abs(timestep - timesteps_first[0])
+                for timestep in timesteps_second.cpu()
+            ]
+            timesteps_second = list(timesteps_second[np.argmin(dist) :].cpu().numpy())
+        elif type_switch == "left_closest":
+            dist = [
+                timestep - timesteps_first[0]
+                for timestep in timesteps_second.cpu()
+                if timestep - timesteps_first[0] > 0
+            ]
+            timesteps_second = list(timesteps_second[dist[-1] :].cpu().numpy())
+        elif type_switch == "right_closest":
+            dist = [
+                timestep - timesteps_first[0]
+                for timestep in timesteps_second.cpu()
+                if timestep - timesteps_first[0] < 0
+            ]
+            timesteps_second = list(timesteps_second[dist[0] :].cpu().numpy())
+
+        return timesteps_first, timesteps_second

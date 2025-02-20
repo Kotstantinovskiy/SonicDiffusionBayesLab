@@ -18,6 +18,7 @@ class TwoSchedulerMethod(BaseMethod):
         )
         self.num_step_switch = self.config.experiment_params.num_step_switch
         self.solver_order = self.config.experiment_params.solver_order
+        self.type_switch = self.config.experiment_params.type_switch
 
         self.batch_size = self.config.inference.get("batch_size", 1)
 
@@ -60,6 +61,7 @@ class TwoSchedulerMethod(BaseMethod):
                 num_inference_steps_first=num_inference_steps_first,
                 num_inference_steps_second=num_inference_steps_second,
                 num_step_switch=num_step_switch,
+                type_switch=self.type_switch,
                 output_type="pt",
             )
             diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
