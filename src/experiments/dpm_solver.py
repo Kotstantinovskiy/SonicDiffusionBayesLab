@@ -43,5 +43,4 @@ class DPMSolverMethod(BaseMethod):
                 gen_dataloader,
                 name_images=f"{self.config.experiment_name}, Solver order: {self.solver_order}, Inference steps: {steps}",
                 name_table=f"{self.config.experiment_name}",
-                inference_step=steps,
             )

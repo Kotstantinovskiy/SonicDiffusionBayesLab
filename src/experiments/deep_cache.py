@@ -52,7 +52,6 @@ class DeepCacheMethod(BaseMethod):
                     gen_dataloader,
                     name_images=f"{self.config.experiment_name}, Inference steps: {steps}, Cache interval: {cache_interval}",
                     name_table=f"{self.config.experiment_name}",
-                    inference_step=steps,
                     additional_values={"Cache interval": cache_interval},
                 )
 

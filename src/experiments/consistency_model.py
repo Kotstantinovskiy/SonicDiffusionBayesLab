@@ -49,5 +49,4 @@ class ConsistencyModelMethod(BaseMethod):
                 gen_dataloader,
                 name_images=f"{self.config.experiment_name}, Inference steps: {steps}",
                 name_table=f"{self.config.experiment_name}",
-                inference_step=steps,
             )
