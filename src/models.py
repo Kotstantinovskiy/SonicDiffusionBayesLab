@@ -20,7 +20,7 @@ from src.registry import models_registry
 class StableDiffusionModel(StableDiffusionPipeline):
     def __call__(self, *args, return_execution_time=True, **kwargs):
         start_time = time.time()
-        result = self.__call__(*args, **kwargs)
+        result = super().__call__(*args, **kwargs)
         end_time = time.time()
         execution_time = end_time - start_time
 
