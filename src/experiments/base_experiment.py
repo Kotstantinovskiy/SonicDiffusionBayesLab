@@ -36,8 +36,14 @@ class BaseMethod(ABC):
         # loggers
         self.setup_loggers()
 
+        # setup experimant params
+        self.setup_exp_params()
+
     @abstractmethod
     def run_experiment(self):
+        pass
+
+    def setup_exp_params(self):
         pass
 
     def setup_generator(self):
@@ -151,6 +157,7 @@ class BaseMethod(ABC):
         gen_dataloader,
         name_images,
         name_table,
+        additional_values: dict = None,
     ):
         for idx, (input_batch, gen_images) in tqdm(
             enumerate(zip(test_dataloader, gen_dataloader)),
@@ -189,6 +196,10 @@ class BaseMethod(ABC):
                         image_file,
                         to_pil_image(gen_image),
                     )
+
+        if additional_values:
+            for k, v in additional_values.items():
+                self.metric_dict[k].append(v)
 
         self.metric_dict["nfe"].append(self.model.num_timesteps)
         self.metric_dict["clip_score_gen_image"].append(

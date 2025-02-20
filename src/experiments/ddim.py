@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-import torch
-from diffusers import DDIMScheduler
 from torch.utils.data import DataLoader
 
 from src.experiments.base_experiment import BaseMethod
@@ -10,29 +8,8 @@ from src.registry import methods_registry
 
 @methods_registry.add_to_registry("ddim")
 class DDIMMethod(BaseMethod):
-    def __init__(self, config):
-        self.config = config
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        # setup generator
-        self.setup_generator()
-
-        # setup model
-        self.setup_model()
-
-        # setup schedulers
-        self.setup_scheduler()
-
-        # setup datasets
-        self.setup_dataset()
-
-        # metrics
-        self.setup_metrics()
-
-        # loggers
-        self.setup_loggers()
-
-        self.num_inference_steps = config.experiment_params.num_inference_steps
+    def setup_exp_params(self):
+        self.num_inference_steps = self.config.experiment_params.num_inference_steps
 
     def run_experiment(self):
         # self.model.scheduler = DDIMScheduler.from_config(

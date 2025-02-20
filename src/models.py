@@ -282,18 +282,13 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
 
                 # compute the previous noisy sample x_t -> x_t-1
                 if i < len(timesteps_first):
-                    output = self.scheduler_first.step(
-                        noise_pred, t, latents, **extra_step_kwargs, return_dict=True
-                    )
+                    latents = self.scheduler_first.step(
+                        noise_pred, t, latents, **extra_step_kwargs, return_dict=False
+                    )[0]
                 else:
-                    output = self.scheduler_second.step(
-                        noise_pred, t, latents, **extra_step_kwargs, return_dict=True
-                    )
-
-                latents = (
-                    output.prev_sample,
-                    output.pred_original_sample.detach().cpu(),
-                )
+                    latents = self.scheduler_second.step(
+                        noise_pred, t, latents, **extra_step_kwargs, return_dict=False
+                    )[0]
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}

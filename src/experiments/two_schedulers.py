@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -10,36 +9,17 @@ from src.registry import methods_registry, schedulers_registry
 
 @methods_registry.add_to_registry("two_schedulers")
 class TwoSchedulerMethod(BaseMethod):
-    def __init__(self, config):
-        self.config = config
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        # setup generator
-        self.setup_generator()
-
-        # setup model
-        self.setup_model()
-
-        # setup schedulers
-        self.setup_scheduler()
-
-        # setup datasets
-        self.setup_dataset()
-
-        # metrics
-        self.setup_metrics()
-
-        # loggers
-        self.setup_loggers()
-
+    def setup_exp_params(self):
         self.num_inference_steps_first = (
-            config.experiment_params.num_inference_steps_first
+            self.config.experiment_params.num_inference_steps_first
         )
         self.num_inference_steps_second = (
-            config.experiment_params.num_inference_steps_second
+            self.config.experiment_params.num_inference_steps_second
         )
-        self.num_step_switch = config.experiment_params.num_step_switch
-        self.solver_order = config.experiment_params.solver_order
+        self.num_step_switch = self.config.experiment_params.num_step_switch
+        self.solver_order = self.config.experiment_params.solver_order
+
+        self.batch_size = self.config.inference.get("batch_size", 1)
 
     def setup_scheduler(self):
         scheduler_first_name = self.config.scheduler.scheduler_first
@@ -102,11 +82,10 @@ class TwoSchedulerMethod(BaseMethod):
         # self.model.scheduler_second = DPMSolverMultistepScheduler.from_config(
         #    self.model.scheduler.config,
         # )
-        batch_size = self.config.inference.get("batch_size", 1)
 
         test_dataloader = DataLoader(
             self.test_dataset,
-            batch_size=batch_size,
+            batch_size=self.batch_size,
             shuffle=False,
         )
 
@@ -126,21 +105,25 @@ class TwoSchedulerMethod(BaseMethod):
                 num_inference_steps_first,
                 num_inference_steps_second,
                 num_step_switch,
-                batch_size,
+                self.batch_size,
             )
             self.model.to("cpu")
 
             gen_dataloader = DataLoader(
                 gen_images,
-                batch_size=batch_size,
+                batch_size=self.batch_size,
                 shuffle=False,
             )
-            self.metric_dict["switch_step"].append(num_step_switch)
 
             # update metrics
             self.validate(
                 test_dataloader,
                 gen_dataloader,
-                name_images="DPM and DDIM",
+                name_images=f"{self.config.experiment_name}, Step first: {num_inference_steps_first}, Step second: {num_inference_steps_second}, Switch: {num_step_switch}",
                 name_table="DPM and DDIM",
+                additional_values={
+                    "num_inference_steps_first": num_inference_steps_first,
+                    "num_inference_steps_second": num_inference_steps_second,
+                    "switch_step": num_step_switch,
+                },
             )

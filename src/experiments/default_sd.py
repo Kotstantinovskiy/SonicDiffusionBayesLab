@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import torch
 from torch.utils.data import DataLoader
 
 from src.experiments.base_experiment import BaseMethod
@@ -9,26 +8,11 @@ from src.registry import methods_registry
 
 @methods_registry.add_to_registry("default")
 class DefaultStableDiffusion(BaseMethod):
-    def __init__(self, config):
-        self.config = config
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+    def setup_exp_params(self):
+        self.num_inference_steps = self.config.experiment_params.num_inference_steps
 
-        # setup generator
-        self.setup_generator()
-
-        # setup model
-        self.setup_model()
-
-        # setup datasets
-        self.setup_dataset()
-
-        # metrics
-        self.setup_metrics()
-
-        # loggers
-        self.setup_loggers()
-
-        self.num_inference_steps = config.experiment_params.num_inference_steps
+    def setup_scheduler(self):
+        return None
 
     def run_experiment(self):
         batch_size = self.config.inference.get("batch_size", 1)
