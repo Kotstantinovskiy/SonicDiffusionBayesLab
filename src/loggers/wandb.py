@@ -22,11 +22,16 @@ class WandbLogger:
     def log_values(self, values: dict, step: int):
         self.run.log(values, step=step)
 
-    def log_images(self, images: dict[str, float]):
-        wandb_images = {
-            name: [wandb.Image(img) for img in img_list]
-            for name, img_list in images.items()
-        }
+    def log_images(self, name_images: str, images: list, captions: list | None = None):
+        if captions:
+            wandb_images = {
+                name_images: [
+                    wandb.Image(img, caption=caption)
+                    for img, caption in zip(images, captions)
+                ]
+            }
+        else:
+            wandb_images = {name_images: [wandb.Image(img) for img in images]}
         self.run.log(wandb_images)
 
     def log_tables(self, tables: dict[str, pd.DataFrame]):
@@ -74,9 +79,12 @@ class Logger:
         self,
         images: list,
         name_images: str,
+        captions: list | None = None,
     ):
         self.wandb_logger.log_images(
-            {name_images: [image for image in images]},
+            name_images=name_images,
+            images=images,
+            captions=captions,
         )
 
     """

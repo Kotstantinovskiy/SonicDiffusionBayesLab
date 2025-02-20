@@ -184,6 +184,7 @@ class BaseMethod(ABC):
                 self.logger.log_batch_of_images(
                     images=gen_images[:16],
                     name_images=name_images,
+                    captions=prompts[:16],
                 )
 
             if self.config.logger.save:
