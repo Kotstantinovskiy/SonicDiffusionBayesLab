@@ -356,22 +356,22 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
 
         if type_switch == "closest":
             dist = [
-                abs(timestep - timesteps_first[0])
+                abs(timestep - timesteps_first[-1])
                 for timestep in timesteps_second.cpu()
             ]
             timesteps_second = list(timesteps_second[np.argmin(dist) :].cpu().numpy())
         elif type_switch == "left_closest":
             dist = [
-                timestep - timesteps_first[0]
-                for timestep in timesteps_second.cpu()
-                if timestep - timesteps_first[0] > 0
+                idx
+                for idx, timestep in enumerate(timesteps_second.cpu())
+                if timestep - timesteps_first[-1] >= 0
             ]
             timesteps_second = list(timesteps_second[dist[-1] :].cpu().numpy())
         elif type_switch == "right_closest":
             dist = [
-                timestep - timesteps_first[0]
-                for timestep in timesteps_second.cpu()
-                if timestep - timesteps_first[0] < 0
+                idx
+                for idx, timestep in enumerate(timesteps_second.cpu())
+                if timestep - timesteps_first[-1] <= 0
             ]
             timesteps_second = list(timesteps_second[dist[0] :].cpu().numpy())
 
