@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-import clip
 import ImageReward as RM
 import numpy as np
 import torch
@@ -109,43 +108,6 @@ class FID(FrechetInceptionDistance, CustomMetric):
             self.update(imgs=img_tensor, real=real)
 
         return self.compute().item()
-
-
-@metrics_registry.add_to_registry("aethetic_score")
-class AetheticScore(Metric, CustomMetric):
-    def __init__(self, model_name="aethetic_score_model", device: str = "cpu"):
-        self.model_name = model_name
-        self.aethetic_score_mlp = AethteticScoreMLP(input_size=768)
-        self.clip = clip.load("ViT-B/32", device=device)
-        self.device = device
-
-    def normalized(a, axis=-1, order=2):
-        l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
-        l2[l2 == 0] = 1
-        return a / np.expand_dims(l2, axis)
-
-    @torch.no_grad()
-    def calc_metric(
-        self,
-        images: list[Image.Image],
-        device: str = "cpu",
-    ) -> float:
-        image_features = [
-            self.normalized(self.clip.encode_image(image).cpu().detach.numpy())
-            for image in images
-        ]
-        predictions = []
-        for image_feature in image_features:
-            predictions.append(
-                self.aethetic_score_mlp(
-                    torch.from_numpy(image_feature)
-                    .to(device)
-                    .type(
-                        torch.FloatTensor if device == "cpu" else torch.cuda.FloatTensor
-                    )
-                )
-            )
-        return predictions
 
 
 @metrics_registry.add_to_registry("time_metric")
