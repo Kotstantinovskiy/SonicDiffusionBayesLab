@@ -90,17 +90,18 @@ class BaseMethod(ABC):
 
         self.clip_score_gen_metric = metrics_registry["clip_score"](
             model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
-        ).to(self.device)
+        )
 
         self.image_reward_metric = metrics_registry["image_reward"](
             model_name=self.config.quality_metrics.image_reward.model_name,
             device=self.device,
         )
+
         self.fid_metric = metrics_registry["fid"](
             feature=self.config.quality_metrics.fid.feature,
             input_img_size=self.config.quality_metrics.fid.input_img_size,
             normalize=self.config.quality_metrics.fid.normalize,
-        ).to(self.device)
+        )
 
         self.time_metric = metrics_registry["time_metric"]()
 
@@ -155,6 +156,9 @@ class BaseMethod(ABC):
         name_table,
         additional_values: dict = None,
     ):
+        self.clip_score_gen_metric.to(self.device)
+        self.fid_metric.to(self.device)
+
         for idx, (input_batch, gen_images) in tqdm(
             enumerate(zip(test_dataloader, gen_dataloader)),
             total=len(test_dataloader),
@@ -192,6 +196,9 @@ class BaseMethod(ABC):
                         image_file,
                         to_pil_image(gen_image),
                     )
+
+        self.clip_score_gen_metric.to("cpu")
+        self.fid_metric.to("cpu")
 
         if additional_values:
             for k, v in additional_values.items():
