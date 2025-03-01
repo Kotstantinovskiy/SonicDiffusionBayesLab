@@ -82,13 +82,13 @@ class StableDiffusionModel(StableDiffusionPipeline):
         if not height or not width:
             height = (
                 self.unet.config.sample_size
-                if self._is_unet_config_sample_size_int
-                else self.unet.config.sample_size[0]
+                # if self._is_unet_config_sample_size_int
+                # else self.unet.config.sample_size[0]
             )
             width = (
                 self.unet.config.sample_size
-                if self._is_unet_config_sample_size_int
-                else self.unet.config.sample_size[1]
+                # if self._is_unet_config_sample_size_int
+                # else self.unet.config.sample_size[1]
             )
             height, width = (
                 height * self.vae_scale_factor,
