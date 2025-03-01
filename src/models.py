@@ -26,6 +26,7 @@ class StableDiffusionModel(StableDiffusionPipeline):
 
         return result
 
+    @torch.no_grad()
     def call(
         self,
         prompt: Union[str, List[str]] = None,
