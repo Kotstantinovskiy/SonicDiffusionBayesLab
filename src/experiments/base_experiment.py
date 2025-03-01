@@ -90,21 +90,17 @@ class BaseMethod(ABC):
 
         self.clip_score_gen_metric = metrics_registry["clip_score"](
             model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
-        )
-        self.clip_score_real_metric = metrics_registry["clip_score"](
-            model_name_or_path=self.config.quality_metrics.clip_score.model_name_or_path
-        )
+        ).to(self.device)
 
         self.image_reward_metric = metrics_registry["image_reward"](
             model_name=self.config.quality_metrics.image_reward.model_name,
             device=self.device,
         )
-
         self.fid_metric = metrics_registry["fid"](
             feature=self.config.quality_metrics.fid.feature,
             input_img_size=self.config.quality_metrics.fid.input_img_size,
             normalize=self.config.quality_metrics.fid.normalize,
-        )
+        ).to(self.device)
 
         self.time_metric = metrics_registry["time_metric"]()
 
@@ -172,13 +168,12 @@ class BaseMethod(ABC):
             real_images = (real_images * 255).to(torch.uint8).cpu()
             gen_images = (gen_images * 255).to(torch.uint8).cpu()
 
-            self.clip_score_gen_metric.update(gen_images, prompts)
-            self.clip_score_real_metric.update(real_images, prompts)
+            self.clip_score_gen_metric.update(gen_images.to(self.device), prompts)
 
             self.image_reward_metric.update(real_images, gen_images, prompts)
 
-            self.fid_metric.update(gen_images, real=False)
-            self.fid_metric.update(real_images, real=True)
+            self.fid_metric.update(gen_images.to(self.device), real=False)
+            self.fid_metric.update(real_images.to(self.device), real=True)
 
             if idx % self.config.logger.log_images_step == 0:
                 self.logger.log_batch_of_images(
@@ -205,9 +200,6 @@ class BaseMethod(ABC):
         self.metric_dict["nfe"].append(self.model.num_timesteps)
         self.metric_dict["clip_score_gen_image"].append(
             self.clip_score_gen_metric.compute().item()
-        )
-        self.metric_dict["clip_score_real_image"].append(
-            self.clip_score_real_metric.compute().item()
         )
 
         self.metric_dict["image_reward"].append(

@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import ImageReward as RM
-import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader
@@ -13,7 +12,6 @@ from torchvision.transforms.functional import pil_to_tensor
 from tqdm import tqdm
 from typing_extensions import Literal
 
-from src.metrics.aethetic_score_model import AethteticScoreMLP
 from src.registry import metrics_registry
 from src.utils.model_utils import to_pil_image
 

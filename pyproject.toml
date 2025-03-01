@@ -22,6 +22,9 @@ dependencies = [
     "torch-fidelity==0.3.0",
 ]
 
+[tool.poetry.dependencies]
+mypackage = {git = "https://github.com/username/repository.git", branch = "branch-name" }
+
 [tool.poetry]
 package-mode = false
 
