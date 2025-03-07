@@ -90,6 +90,10 @@ class RewardModel(Metric, CustomMetric):
 
         return self.reward_sum / self.total
 
+    def reset(self) -> None:
+        self.reward_sum = 0.0
+        self.total = 0
+
 
 @metrics_registry.add_to_registry("fid")
 class FID(FrechetInceptionDistance, CustomMetric):
@@ -121,3 +125,7 @@ class TimeMetric(Metric):
 
     def compute(self) -> float:
         return self.time / self.total
+
+    def reset(self) -> None:
+        self.time = 0.0
+        self.total = 0

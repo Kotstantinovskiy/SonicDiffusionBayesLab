@@ -230,3 +230,8 @@ class BaseMethod(ABC):
             metrics=self.metric_dict,
             name_table=name_table,
         )
+
+        self.fid_metric.reset()
+        self.clip_score_gen_metric.reset()
+        self.image_reward_metric.reset()
+        self.time_metric.reset()
