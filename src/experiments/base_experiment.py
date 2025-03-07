@@ -58,7 +58,6 @@ class BaseMethod(ABC):
             requires_safety_checker=False,
             torch_dtype=torch.float16,
         )
-        self.model.eval()
         self.model.to(self.device)
 
     def setup_scheduler(self):
