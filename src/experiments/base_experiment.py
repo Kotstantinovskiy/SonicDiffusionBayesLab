@@ -180,10 +180,12 @@ class BaseMethod(ABC):
             self.fid_metric.update(real_images.to(self.device), real=True)
 
             if idx % self.config.logger.log_images_step == 0:
+                number_save_images = self.config.experiment.get("number_save_images", 8)
+
                 self.logger.log_batch_of_images(
-                    images=gen_images[:16],
+                    images=gen_images[:number_save_images],
                     name_images=name_images,
-                    captions=prompts[:16],
+                    captions=prompts[:number_save_images],
                 )
 
             if self.config.logger.save:
