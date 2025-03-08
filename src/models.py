@@ -461,9 +461,6 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
             self.scheduler_second, num_inference_steps_second, device, timesteps, sigmas
         )
 
-        print(f"First timestemps before truncate: {timesteps_first}")
-        print(f"Second timestemps before truncate: {timesteps_second}")
-
         # Choose switch timestamp
         timesteps_first, timesteps_second = self.switch_timestamp(
             timesteps_first=timesteps_first,
@@ -471,9 +468,6 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
             num_step_switch=num_step_switch,
             type_switch=type_switch,
         )
-
-        print(f"First timestemps after truncate: {timesteps_first}")
-        print(f"Second timestemps after truncate: {timesteps_second}")
 
         # 5. Prepare latent variables
         num_channels_latents = self.unet.config.in_channels
@@ -527,12 +521,10 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                 )
 
                 if i < len(timesteps_first):
-                    print("First scheduler")
                     latent_model_input = self.scheduler_first.scale_model_input(
                         latent_model_input, t
                     )
                 else:
-                    print("Second scheduler")
                     latent_model_input = self.scheduler_second.scale_model_input(
                         latent_model_input, t
                     )
