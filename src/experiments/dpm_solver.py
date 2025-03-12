@@ -14,6 +14,9 @@ class DPMSolverMethod(BaseMethod):
 
         self.batch_size = self.config.inference.get("batch_size", 1)
 
+    def setup_scheduler(self, **kwargs):
+        return super().setup_scheduler(solver_order=self.solver_order)
+
     def run_experiment(self):
         # self.model.scheduler = DPMSolverMultistepScheduler.from_config(
         #    self.model.scheduler.config,

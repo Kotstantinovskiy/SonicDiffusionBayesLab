@@ -60,10 +60,11 @@ class BaseMethod(ABC):
         )
         self.model.to(self.device)
 
-    def setup_scheduler(self):
+    def setup_scheduler(self, **kwargs):
         scheduler_name = self.config.scheduler.scheduler_name
         self.model.schedluers = schedulers_registry[scheduler_name].from_config(
-            self.model.scheduler.config
+            self.model.scheduler.config,
+            **kwargs,
         )
 
     def setup_dataset(self):
