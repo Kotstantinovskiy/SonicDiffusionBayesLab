@@ -18,6 +18,9 @@ class BaseMethod(ABC):
         self.config = config
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        # setup experimant params
+        self.setup_exp_params()
+
         # setup generator
         self.setup_generator()
 
@@ -35,9 +38,6 @@ class BaseMethod(ABC):
 
         # loggers
         self.setup_loggers()
-
-        # setup experimant params
-        self.setup_exp_params()
 
     @abstractmethod
     def run_experiment(self):
