@@ -221,6 +221,7 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     latent_model_input, t
                 )
 
+                print(i, t)
                 # predict the noise residual
                 noise_pred = self.unet(
                     latent_model_input,
