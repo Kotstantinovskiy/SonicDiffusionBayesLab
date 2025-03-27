@@ -205,8 +205,6 @@ class StableDiffusionModel(StableDiffusionPipeline):
         start_time = time.time()
 
         with self.progress_bar(total=num_inference_steps) as progress_bar:
-            print(f"Timesteps: {timesteps}")
-            print(f"Num timesteps: {num_inference_steps}")
             for i, t in enumerate(timesteps):
                 if self.interrupt:
                     continue
@@ -221,7 +219,6 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     latent_model_input, t
                 )
 
-                print(i, t)
                 # predict the noise residual
                 noise_pred = self.unet(
                     latent_model_input,
