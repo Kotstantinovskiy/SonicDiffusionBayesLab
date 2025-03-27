@@ -62,7 +62,7 @@ class BaseMethod(ABC):
 
     def setup_scheduler(self, **kwargs):
         scheduler_name = self.config.scheduler.scheduler_name
-        self.model.schedluers = schedulers_registry[scheduler_name].from_config(
+        self.model.scheduler = schedulers_registry[scheduler_name].from_config(
             self.model.scheduler.config,
             **kwargs,
         )
