@@ -12,6 +12,7 @@ from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion import (
     retrieve_timesteps,
 )
 from diffusers.utils import deprecate
+from src.schedulers import DPMSolverScheduler
 
 from src.registry import models_registry
 
@@ -507,6 +508,7 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
         # num_warmup_steps_second = len(timesteps_second) - num_inference_steps_second * self.scheduler_second.order
         self._num_timesteps = len(timesteps_first) + len(timesteps_second)
         start_time = time.time()
+        first_step_second_scheduler = True
 
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
             for i, t in enumerate(timesteps_first + timesteps_second):
@@ -564,6 +566,17 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                     latents = self.scheduler_second.step(
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                     )[0]
+
+                    if (
+                        isinstance(self.scheduler_second, DPMSolverScheduler)
+                        and first_step_second_scheduler
+                    ):
+                        for i in range(self.scheduler_second.config.solver_order - 1):
+                            self.scheduler_second.model_outputs[i] = (
+                                self.scheduler_second.model_outputs[i + 1]
+                            )
+                        self.scheduler_second.model_outputs[-1] = latents
+                        first_step_second_scheduler = False
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
