@@ -563,15 +563,13 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                     )[0]
                 else:
-                    latents = self.scheduler_second.step(
-                        noise_pred, t, latents, **extra_step_kwargs, return_dict=False
-                    )[0]
-
+                    '''
                     if (
                         isinstance(self.scheduler_second, DPMSolverScheduler)
                         and isinstance(self.scheduler_first, DPMSolverScheduler)
                         and first_step_second_scheduler
                     ):
+                        print('Switch cache')
                         if self.scheduler_second.config.solver_order == 1:
                             self.scheduler_second.model_outputs[0] = latents
                         elif self.scheduler_second.config.solver_order == 2:
@@ -581,6 +579,11 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                             self.scheduler_second.model_outputs[1] = latents
 
                         first_step_second_scheduler = False
+                    '''
+                    
+                    latents = self.scheduler_second.step(
+                        noise_pred, t, latents, **extra_step_kwargs, return_dict=False
+                    )[0]
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
