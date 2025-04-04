@@ -569,13 +569,17 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
 
                     if (
                         isinstance(self.scheduler_second, DPMSolverScheduler)
+                        and isinstance(self.scheduler_first, DPMSolverScheduler)
                         and first_step_second_scheduler
                     ):
-                        for i in range(self.scheduler_second.config.solver_order - 1):
-                            self.scheduler_second.model_outputs[i] = (
-                                self.scheduler_second.model_outputs[i + 1]
+                        if self.scheduler_second.config.solver_order == 1:
+                            self.scheduler_second.model_outputs[0] = latents
+                        elif self.scheduler_second.config.solver_order == 2:
+                            self.scheduler_second.model_outputs[0] = (
+                                self.scheduler_first.model_outputs[-1]
                             )
-                        self.scheduler_second.model_outputs[-1] = latents
+                            self.scheduler_second.model_outputs[1] = latents
+
                         first_step_second_scheduler = False
 
                 if callback_on_step_end is not None:

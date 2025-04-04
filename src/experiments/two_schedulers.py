@@ -17,7 +17,8 @@ class TwoSchedulerMethod(BaseMethod):
             self.config.experiment_params.num_inference_steps_second
         )
         self.num_step_switch = self.config.experiment_params.num_step_switch
-        self.solver_order = self.config.experiment_params.solver_order
+        self.first_order_solver = self.config.experiment_params.first_order_solver
+        self.second_order_solver = self.config.experiment_params.second_order_solver
         self.type_switch = self.config.experiment_params.type_switch
 
         self.batch_size = self.config.inference.get("batch_size", 1)
@@ -27,10 +28,12 @@ class TwoSchedulerMethod(BaseMethod):
         scheduler_second_name = self.config.scheduler.scheduler_second
         self.model.scheduler_first = schedulers_registry[
             scheduler_first_name
-        ].from_config(self.model.scheduler.config)
+        ].from_config(self.model.scheduler.config, sovler_order=self.first_order_solver)
         self.model.scheduler_second = schedulers_registry[
             scheduler_second_name
-        ].from_config(self.model.scheduler.config)
+        ].from_config(
+            self.model.scheduler.config, sovler_order=self.second_order_solver
+        )
 
     def generate(
         self,
