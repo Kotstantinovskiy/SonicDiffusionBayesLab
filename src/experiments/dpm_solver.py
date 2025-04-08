@@ -12,12 +12,14 @@ class DPMSolverMethod(BaseMethod):
         self.num_inference_steps = self.config.experiment_params.num_inference_steps
         self.solver_order = self.config.experiment_params.solver_order
         self.algorithm_type = self.config.experiment_params.algorithm_type
+        self.final_sigmas_type = self.config.experiment_params.final_sigmas_type
 
         self.batch_size = self.config.inference.get("batch_size", 1)
 
     def setup_scheduler(self, **kwargs):
         return super().setup_scheduler(solver_order=self.solver_order,
-                                       algorithm_type=self.algorithm_type)
+                                       algorithm_type=self.algorithm_type,
+                                       final_sigmas_type=self.final_sigmas_type,)
 
     def run_experiment(self):
         # self.model.scheduler = DPMSolverMultistepScheduler.from_config(
