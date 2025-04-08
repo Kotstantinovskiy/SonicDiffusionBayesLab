@@ -566,7 +566,7 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                     if isinstance(self.scheduler_second, DPMSolverScheduler):
                         model_output = self.scheduler_second.convert_model_output(noise_pred, sample=latents)
                         for i in range(self.scheduler_second.config.solver_order - 1):
-                            self.scheduler_second.model_outputs[i] = self.scheduler_main.model_outputs[i + 1]
+                            self.scheduler_second.model_outputs[i] = self.scheduler_second.model_outputs[i + 1]
                         self.scheduler_second.model_outputs[-1] = model_output
                 else:
                     latents = self.scheduler_second.step(
