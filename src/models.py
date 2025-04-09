@@ -813,7 +813,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             self.scheduler_main, num_inference_steps, device, timesteps, sigmas
         )
         timesteps_inter, num_inference_steps_inter = retrieve_timesteps(
-            self.scheduler_inter, device=device, timesteps=timesteps_main.cpu().numpy()
+            self.scheduler_inter, num_inference_steps, device, timesteps, sigmas
         )
 
         # Choose switch timestamp
