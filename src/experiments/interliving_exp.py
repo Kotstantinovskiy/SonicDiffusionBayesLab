@@ -26,8 +26,8 @@ class InterlivingSchedulerMethod(BaseMethod):
         self.batch_size = self.config.inference.get("batch_size", 1)
 
     def setup_scheduler(self):
-        scheduler_first_name = self.config.scheduler.scheduler_first
-        scheduler_second_name = self.config.scheduler.scheduler_second
+        scheduler_first_name = self.config.scheduler.scheduler_main
+        scheduler_second_name = self.config.scheduler.scheduler_inter
         self.model.scheduler_main = schedulers_registry[
             scheduler_first_name
         ].from_config(self.model.scheduler.config,
