@@ -872,6 +872,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     else latents
                 )
                 
+                print("STEP:", (len(timesteps_main) - len(timesteps_main) % self.scheduler_main.solver_order) // self.scheduler_main.solver_order)
                 if (len(timesteps_main) - len(timesteps_main) % self.scheduler_main.solver_order) // self.scheduler_main.solver_order in interliving_steps:
                     if len(timesteps_main) % self.scheduler_main.solver_order == self.scheduler_main.solver_order - 1:
                         latent_model_input = self.scheduler_inter.scale_model_input(
