@@ -126,10 +126,10 @@ class InterlivingSchedulerMethod(BaseMethod):
             self.validate(
                 test_dataloader,
                 gen_dataloader,
-                name_images=f"{self.config.experiment_name}, Step main: {num_inference_steps_first}, Inter steps:{' '.join(interliving_steps)}",
+                name_images=f"{self.config.experiment_name}, Step main: {num_inference_steps_first}, Inter steps:{' '.join(list(map(str, interliving_steps)))}",
                 name_table=f"{self.config.experiment_name}",
                 additional_values={
                     "num_inference_steps_main": num_inference_steps_first,
-                    "num_inter_steps": " ".join(interliving_steps),
+                    "num_inter_steps": ' '.join(list(map(str, interliving_steps))),
                 },
             )
