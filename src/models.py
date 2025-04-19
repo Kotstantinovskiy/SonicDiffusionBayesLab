@@ -248,7 +248,6 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     )
 
                 # compute the previous noisy sample x_t -> x_t-1
-                print(f"Sheduler: {self.scheduler}")
                 latents = self.scheduler.step(
                     noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                 )[0]
