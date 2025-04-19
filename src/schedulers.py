@@ -9,7 +9,7 @@ class DPMSolverScheduler(DPMSolverMultistepScheduler):
 
 
 @schedulers_registry.add_to_registry("ddim_scheduler")
-class DDIMScheduler(DDIMScheduler):
+class DDIMSchedulerMy(DDIMScheduler):
     pass
 
 
