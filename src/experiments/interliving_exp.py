@@ -42,7 +42,7 @@ class InterlivingSchedulerMethod(BaseMethod):
         scheduler_first_name = self.config.scheduler.scheduler_main
         scheduler_second_name = self.config.scheduler.scheduler_inter
 
-        base_config = dict(self.model.scheduler.config._internal_dict)
+        base_config = dict(self.model.scheduler.config)
         base_config["solver_order"] = self.main_order_solver
         base_config["algorithm_type"] = self.main_algorithm_type
         base_config["final_sigmas_type"] = self.main_final_sigmas_type
@@ -51,7 +51,7 @@ class InterlivingSchedulerMethod(BaseMethod):
             scheduler_first_name
         ].from_config(base_config)
 
-        base_config = dict(self.model.scheduler.config._internal_dict)
+        base_config = dict(self.model.scheduler.config)
         base_config["solver_order"] = self.inter_order_solver
         base_config["algorithm_type"] = self.inter_algorithm_type
         base_config["final_sigmas_type"] = self.inter_final_sigmas_type
