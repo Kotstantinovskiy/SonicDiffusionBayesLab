@@ -833,7 +833,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             sigmas,
         )
         print(
-            num_inference_steps // self.scheduler_main.order,
+            num_inference_steps, self.scheduler_main.order
         )
 
         print(f"Timesteps_main: {timesteps_main}")
