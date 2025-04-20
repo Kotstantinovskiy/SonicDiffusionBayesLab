@@ -817,14 +817,6 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             )
 
         # 4. Prepare timesteps
-        timesteps_inter, num_inference_steps_inter = retrieve_timesteps(
-            self.scheduler_inter,
-            num_inference_steps // self.scheduler_main.order,
-            device,
-            timesteps,
-            sigmas,
-        )
-
         timesteps_main, num_inference_steps_main = retrieve_timesteps(
             self.scheduler_main,
             num_inference_steps,
@@ -832,6 +824,15 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             timesteps,
             sigmas,
         )
+
+        timesteps_inter, num_inference_steps_inter = retrieve_timesteps(
+            self.scheduler_inter,
+            num_inference_steps // self.scheduler_main.order,
+            device,
+            timesteps,
+            sigmas,
+        )
+        print(num_inference_steps // self.scheduler_main.order,)
 
         print(f"Timesteps_main: {timesteps_main}")
         print(f"Timesteps_inter: {timesteps_inter}")
