@@ -892,6 +892,9 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         
         print(f"del_inter: {del_inter}")
         print(f"t_inter: {t_inter}")
+        
+        for d in del_inter:
+            del timesteps_main[d]
             
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
             for i, t in enumerate(timesteps_main):
@@ -905,19 +908,11 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     else latents
                 )
 
-                if (
-                    i - i % self.scheduler_main.solver_order
-                ) // self.scheduler_main.solver_order in interliving_steps:
-                    if (
-                        i % self.scheduler_main.solver_order
-                        == self.scheduler_main.solver_order - 1
-                    ):
-                        latent_model_input = self.scheduler_inter.scale_model_input(
-                            latent_model_input, t
-                        )
-                        print(f"Inter step: {t}")
-                    else:
-                        continue
+                if t in t_inter:
+                    latent_model_input = self.scheduler_inter.scale_model_input(
+                        latent_model_input, t
+                    )
+                    print(f"Inter step: {t}")
                 else:
                     latent_model_input = self.scheduler_main.scale_model_input(
                         latent_model_input, t
@@ -951,37 +946,29 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     )
 
                 # compute the previous noisy sample x_t -> x_t-1
-                if (
-                    len(timesteps_main)
-                    - len(timesteps_main) % self.scheduler_main.solver_order
-                ) // self.scheduler_main.solver_order in interliving_steps:
-                    if (
-                        len(timesteps_main) % self.scheduler_main.solver_order
-                        == self.scheduler_main.solver_order - 1
-                    ):
-                        latents = self.scheduler_inter.step(
-                            noise_pred,
-                            t,
-                            latents,
-                            **extra_step_kwargs,
-                            return_dict=False,
-                        )[0]
+                if t in t_inter:
+                    latents = self.scheduler_inter.step(
+                        noise_pred,
+                        t,
+                        latents,
+                        **extra_step_kwargs,
+                        return_dict=False,
+                    )[0]
 
-                        model_output = self.scheduler_main.convert_model_output(
-                            noise_pred, sample=latents
+                    model_output = self.scheduler_main.convert_model_output(
+                        noise_pred, sample=latents
+                    )
+                    for i in range(self.scheduler_main.config.solver_order - 1):
+                        self.scheduler_main.model_outputs[i] = (
+                            self.scheduler_main.model_outputs[i + 1]
                         )
-                        for i in range(self.scheduler_main.config.solver_order - 1):
-                            self.scheduler_main.model_outputs[i] = (
-                                self.scheduler_main.model_outputs[i + 1]
-                            )
-                        self.scheduler_main.model_outputs[-1] = model_output
-                    else:
-                        continue
-
+                    self.scheduler_main.model_outputs[-1] = model_output
+                    print(f"Inter step: {t}")
                 else:
                     latents = self.scheduler_main.step(
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                     )[0]
+                    print(f"Main step: {t}")
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
