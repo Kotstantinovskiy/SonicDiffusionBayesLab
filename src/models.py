@@ -1072,4 +1072,4 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         midpoints = (x[:-1] + x[1:]) / 2
         out[1::2] = midpoints
 
-        return out.to(device=device)
+        return out
