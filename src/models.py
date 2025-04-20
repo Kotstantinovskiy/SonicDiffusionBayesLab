@@ -829,7 +829,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             self.scheduler_main,
             num_inference_steps,
             device,
-            timesteps_main_tmp,
+            timesteps_main_tmp.to('cpu'),
             sigmas,
         )
         print(timesteps_inter)
