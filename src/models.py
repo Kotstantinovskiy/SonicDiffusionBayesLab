@@ -832,9 +832,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             timesteps,
             sigmas,
         )
-        print(
-            num_inference_steps, self.scheduler_main.order
-        )
+        print(num_inference_steps, self.scheduler_main.order)
 
         print(f"Timesteps_main: {timesteps_main}")
         print(f"Timesteps_inter: {timesteps_inter}")
@@ -996,7 +994,10 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     )
 
                 # call the callback, if provided
-                if i == self._num_timesteps - 1 or (i + 1) % self.scheduler_main.order == 0:
+                if (
+                    i == self._num_timesteps - 1
+                    or (i + 1) % self.scheduler_main.order == 0
+                ):
                     progress_bar.update()
 
                 """

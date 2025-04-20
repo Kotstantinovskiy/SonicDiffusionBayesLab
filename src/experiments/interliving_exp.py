@@ -41,23 +41,24 @@ class InterlivingSchedulerMethod(BaseMethod):
     def setup_scheduler(self):
         scheduler_first_name = self.config.scheduler.scheduler_main
         scheduler_second_name = self.config.scheduler.scheduler_inter
+
+        base_config = dict(self.model.scheduler.config._internal_dict)
+        base_config["solver_order"] = self.main_order_solver
+        base_config["algorithm_type"] = self.main_algorithm_type
+        base_config["final_sigmas_type"] = self.main_final_sigmas_type
+
         self.model.scheduler_main = schedulers_registry[
             scheduler_first_name
-        ].from_config(
-            self.model.scheduler.config,
-            solver_order=self.main_order_solver,
-            algorithm_type=self.main_algorithm_type,
-            final_sigmas_type=self.main_final_sigmas_type,
-        )
+        ].from_config(base_config)
+
+        base_config = dict(self.model.scheduler.config._internal_dict)
+        base_config["solver_order"] = self.inter_order_solver
+        base_config["algorithm_type"] = self.inter_algorithm_type
+        base_config["final_sigmas_type"] = self.inter_final_sigmas_type
 
         self.model.scheduler_inter = schedulers_registry[
             scheduler_second_name
-        ].from_config(
-            self.model.scheduler.config,
-            solver_order=self.inter_order_solver,
-            algorithm_type=self.inter_algorithm_type,
-            final_sigmas_type=self.inter_final_sigmas_type,
-        )
+        ].from_config(base_config)
 
         print(f"Scheduler main: {self.main_order_solver}")
         print(f"Scheduler inter: {self.inter_order_solver}")
