@@ -222,7 +222,6 @@ class StableDiffusionModel(StableDiffusionPipeline):
                 )
 
                 # predict the noise residual
-                print(f"Predict, Step: {i}, Timestep: {t}")
                 noise_pred = self.unet(
                     latent_model_input,
                     t,
@@ -274,7 +273,6 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     if callback is not None and i % callback_steps == 0:
                         step_idx = i // getattr(self.scheduler, "order", 1)
                         callback(step_idx, t, latents)
-                print(f"Time for step: {time.time() - timestamp_start}")
 
         end_time = time.time()
         execution_time = end_time - start_time
@@ -464,7 +462,9 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
             self.scheduler_first, num_inference_steps_first, device, timesteps, sigmas
         )
         timesteps_second, num_inference_steps_second = retrieve_timesteps(
-            scheduler=self.scheduler_second, device=device, timesteps=timesteps_first.cpu().numpy()
+            scheduler=self.scheduler_second,
+            device=device,
+            timesteps=timesteps_first.cpu().numpy(),
         )
 
         # Choose switch timestamp
@@ -567,11 +567,15 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                     latents = self.scheduler_first.step(
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                     )[0]
-                    
+
                     if isinstance(self.scheduler_second, DPMSolverScheduler):
-                        model_output = self.scheduler_second.convert_model_output(noise_pred, sample=latents)
+                        model_output = self.scheduler_second.convert_model_output(
+                            noise_pred, sample=latents
+                        )
                         for i in range(self.scheduler_second.config.solver_order - 1):
-                            self.scheduler_second.model_outputs[i] = self.scheduler_second.model_outputs[i + 1]
+                            self.scheduler_second.model_outputs[i] = (
+                                self.scheduler_second.model_outputs[i + 1]
+                            )
                         self.scheduler_second.model_outputs[-1] = model_output
                 else:
                     latents = self.scheduler_second.step(
@@ -664,7 +668,6 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
             timesteps_second = list(timesteps_second[dist[0] :].cpu().numpy())
 
         return timesteps_first, timesteps_second
-
 
 
 @models_registry.add_to_registry("stable_diffusion_model_interliving_schedulers")
@@ -814,15 +817,22 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             )
 
         # 4. Prepare timesteps
-        timesteps_main, num_inference_steps_main = retrieve_timesteps(
-            self.scheduler_main, num_inference_steps, device, timesteps, sigmas
-        )
         timesteps_inter, num_inference_steps_inter = retrieve_timesteps(
             self.scheduler_inter, num_inference_steps, device, timesteps, sigmas
         )
 
+        timesteps_main, num_inference_steps_main = retrieve_timesteps(
+            self.scheduler_main,
+            num_inference_steps,
+            device,
+            self.insert_midpoints_tensor(timesteps_inter, device),
+            sigmas,
+        )
+        print(timesteps_inter)
+        print(timesteps_main)
+
         # Choose switch timestamp
-        #timesteps_inter = timesteps_inter[interliving_steps]
+        # timesteps_inter = timesteps_inter[interliving_steps]
 
         # 5. Prepare latent variables
         num_channels_latents = self.unet.config.in_channels
@@ -876,10 +886,19 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     if self.do_classifier_free_guidance
                     else latents
                 )
-                
-                print("STEP:", (i - i % self.scheduler_main.solver_order) // self.scheduler_main.solver_order)
-                if (i - i % self.scheduler_main.solver_order) // self.scheduler_main.solver_order in interliving_steps:
-                    if i % self.scheduler_main.solver_order == self.scheduler_main.solver_order - 1:
+
+                print(
+                    "STEP:",
+                    (i - i % self.scheduler_main.solver_order)
+                    // self.scheduler_main.solver_order,
+                )
+                if (
+                    i - i % self.scheduler_main.solver_order
+                ) // self.scheduler_main.solver_order in interliving_steps:
+                    if (
+                        i % self.scheduler_main.solver_order
+                        == self.scheduler_main.solver_order - 1
+                    ):
                         latent_model_input = self.scheduler_inter.scale_model_input(
                             latent_model_input, t
                         )
@@ -919,15 +938,29 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     )
 
                 # compute the previous noisy sample x_t -> x_t-1
-                if (len(timesteps_main) - len(timesteps_main) % self.scheduler_main.solver_order) // self.scheduler_main.solver_order in interliving_steps:
-                    if len(timesteps_main) % self.scheduler_main.solver_order == self.scheduler_main.solver_order - 1:
+                if (
+                    len(timesteps_main)
+                    - len(timesteps_main) % self.scheduler_main.solver_order
+                ) // self.scheduler_main.solver_order in interliving_steps:
+                    if (
+                        len(timesteps_main) % self.scheduler_main.solver_order
+                        == self.scheduler_main.solver_order - 1
+                    ):
                         latents = self.scheduler_inter.step(
-                            noise_pred, t, latents, **extra_step_kwargs, return_dict=False
+                            noise_pred,
+                            t,
+                            latents,
+                            **extra_step_kwargs,
+                            return_dict=False,
                         )[0]
-                        
-                        model_output = self.scheduler_main.convert_model_output(noise_pred, sample=latents)
+
+                        model_output = self.scheduler_main.convert_model_output(
+                            noise_pred, sample=latents
+                        )
                         for i in range(self.scheduler_main.config.solver_order - 1):
-                            self.scheduler_main.model_outputs[i] = self.scheduler_main.model_outputs[i + 1]
+                            self.scheduler_main.model_outputs[i] = (
+                                self.scheduler_main.model_outputs[i + 1]
+                            )
                         self.scheduler_main.model_outputs[-1] = model_output
                     else:
                         continue
@@ -1023,3 +1056,20 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             timesteps_second = list(timesteps_second[dist[0] :].cpu().numpy())
 
         return timesteps_first, timesteps_second
+
+    def insert_midpoints_tensor(self, x: torch.Tensor, device: str) -> torch.Tensor:
+        if x.ndim != 1:
+            raise ValueError(f"Expected 1D tensor, got shape {tuple(x.shape)}")
+
+        n = x.shape[0]
+        if n == 0:
+            return x.clone()
+
+        out = x.new_empty((2 * n - 1,), dtype=x.dtype)
+
+        out[0::2] = x
+
+        midpoints = (x[:-1] + x[1:]) / 2
+        out[1::2] = midpoints
+
+        return out.to(device=device)

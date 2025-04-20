@@ -17,14 +17,26 @@ class TwoSchedulerMethod(BaseMethod):
             self.config.experiment_params.num_inference_steps_second
         )
         self.num_step_switch = self.config.experiment_params.num_step_switch
-        self.first_order_solver = self.config.experiment_params.get('first_order_solver', '')
-        self.second_order_solver = self.config.experiment_params.get('second_order_solver', '')
-        
-        self.first_algorithm_type = self.config.experiment_params.get('first_algorithm_type', '')
-        self.second_algorithm_type = self.config.experiment_params.get('second_algorithm_type', '')
-        self.first_final_sigmas_type = self.config.experiment_params.get('first_final_sigmas_type', '')
-        self.second_final_sigmas_type = self.config.experiment_params.get('second_final_sigmas_type', '')
-        
+        self.first_order_solver = self.config.experiment_params.get(
+            "first_order_solver", ""
+        )
+        self.second_order_solver = self.config.experiment_params.get(
+            "second_order_solver", ""
+        )
+
+        self.first_algorithm_type = self.config.experiment_params.get(
+            "first_algorithm_type", ""
+        )
+        self.second_algorithm_type = self.config.experiment_params.get(
+            "second_algorithm_type", ""
+        )
+        self.first_final_sigmas_type = self.config.experiment_params.get(
+            "first_final_sigmas_type", ""
+        )
+        self.second_final_sigmas_type = self.config.experiment_params.get(
+            "second_final_sigmas_type", ""
+        )
+
         self.type_switch = self.config.experiment_params.type_switch
 
         self.batch_size = self.config.inference.get("batch_size", 1)
@@ -34,10 +46,12 @@ class TwoSchedulerMethod(BaseMethod):
         scheduler_second_name = self.config.scheduler.scheduler_second
         self.model.scheduler_first = schedulers_registry[
             scheduler_first_name
-        ].from_config(self.model.scheduler.config,
-                      sovler_order=self.first_order_solver,
-                     algorithm_type=self.first_algorithm_type,
-                     final_sigmas_type=self.first_final_sigmas_type,)
+        ].from_config(
+            self.model.scheduler.config,
+            sovler_order=self.first_order_solver,
+            algorithm_type=self.first_algorithm_type,
+            final_sigmas_type=self.first_final_sigmas_type,
+        )
         self.model.scheduler_second = schedulers_registry[
             scheduler_second_name
         ].from_config(

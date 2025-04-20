@@ -33,7 +33,9 @@ class DPMSolverScheduler(DPMSolverMultistepScheduler):
             or self.config.final_sigmas_type == "zero"
         )
         lower_order_second = (
-            (self.step_index == len(self.timesteps) - 2) and self.config.lower_order_final and len(self.timesteps) < 15
+            (self.step_index == len(self.timesteps) - 2)
+            and self.config.lower_order_final
+            and len(self.timesteps) < 15
         )
 
         model_output = self.convert_model_output(model_output, sample=sample)
@@ -43,23 +45,43 @@ class DPMSolverScheduler(DPMSolverMultistepScheduler):
 
         # Upcast to avoid precision issues when computing prev_sample
         sample = sample.to(torch.float32)
-        if self.config.algorithm_type in ["sde-dpmsolver", "sde-dpmsolver++"] and variance_noise is None:
+        if (
+            self.config.algorithm_type in ["sde-dpmsolver", "sde-dpmsolver++"]
+            and variance_noise is None
+        ):
             noise = randn_tensor(
-                model_output.shape, generator=generator, device=model_output.device, dtype=torch.float32
+                model_output.shape,
+                generator=generator,
+                device=model_output.device,
+                dtype=torch.float32,
             )
         elif self.config.algorithm_type in ["sde-dpmsolver", "sde-dpmsolver++"]:
             noise = variance_noise.to(device=model_output.device, dtype=torch.float32)
         else:
             noise = None
 
-        print(f"Model outputs: {len(self.model_outputs )}")
-        
-        if self.config.solver_order == 1 or self.lower_order_nums < 1 or lower_order_final:
-            prev_sample = self.dpm_solver_first_order_update(model_output, sample=sample, noise=noise)
-        elif self.config.solver_order == 2 or self.lower_order_nums < 2 or lower_order_second:
-            prev_sample = self.multistep_dpm_solver_second_order_update(self.model_outputs, sample=sample, noise=noise)
+        print(f"Model outputs: {len(self.model_outputs)}")
+
+        if (
+            self.config.solver_order == 1
+            or self.lower_order_nums < 1
+            or lower_order_final
+        ):
+            prev_sample = self.dpm_solver_first_order_update(
+                model_output, sample=sample, noise=noise
+            )
+        elif (
+            self.config.solver_order == 2
+            or self.lower_order_nums < 2
+            or lower_order_second
+        ):
+            prev_sample = self.multistep_dpm_solver_second_order_update(
+                self.model_outputs, sample=sample, noise=noise
+            )
         else:
-            prev_sample = self.multistep_dpm_solver_third_order_update(self.model_outputs, sample=sample, noise=noise)
+            prev_sample = self.multistep_dpm_solver_third_order_update(
+                self.model_outputs, sample=sample, noise=noise
+            )
 
         if self.lower_order_nums < self.config.solver_order:
             self.lower_order_nums += 1

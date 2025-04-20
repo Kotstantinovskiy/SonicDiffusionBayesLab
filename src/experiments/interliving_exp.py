@@ -15,13 +15,25 @@ class InterlivingSchedulerMethod(BaseMethod):
         )
         self.interliving_steps = self.config.experiment_params.interliving_steps
 
-        self.first_order_solver = self.config.experiment_params.get('first_order_solver', '')
-        self.second_order_solver = self.config.experiment_params.get('second_order_solver', '')
-        
-        self.first_algorithm_type = self.config.experiment_params.get('first_algorithm_type', '')
-        self.second_algorithm_type = self.config.experiment_params.get('second_algorithm_type', '')
-        self.first_final_sigmas_type = self.config.experiment_params.get('first_final_sigmas_type', '')
-        self.second_final_sigmas_type = self.config.experiment_params.get('second_final_sigmas_type', '')
+        self.first_order_solver = self.config.experiment_params.get(
+            "first_order_solver", ""
+        )
+        self.second_order_solver = self.config.experiment_params.get(
+            "second_order_solver", ""
+        )
+
+        self.first_algorithm_type = self.config.experiment_params.get(
+            "first_algorithm_type", ""
+        )
+        self.second_algorithm_type = self.config.experiment_params.get(
+            "second_algorithm_type", ""
+        )
+        self.first_final_sigmas_type = self.config.experiment_params.get(
+            "first_final_sigmas_type", ""
+        )
+        self.second_final_sigmas_type = self.config.experiment_params.get(
+            "second_final_sigmas_type", ""
+        )
 
         self.batch_size = self.config.inference.get("batch_size", 1)
 
@@ -30,10 +42,13 @@ class InterlivingSchedulerMethod(BaseMethod):
         scheduler_second_name = self.config.scheduler.scheduler_inter
         self.model.scheduler_main = schedulers_registry[
             scheduler_first_name
-        ].from_config(self.model.scheduler.config,
-                      sovler_order=self.first_order_solver,
-                      algorithm_type=self.first_algorithm_type,
-                      final_sigmas_type=self.first_final_sigmas_type,)
+        ].from_config(
+            self.model.scheduler.config,
+            sovler_order=self.first_order_solver,
+            algorithm_type=self.first_algorithm_type,
+            final_sigmas_type=self.first_final_sigmas_type,
+        )
+
         self.model.scheduler_inter = schedulers_registry[
             scheduler_second_name
         ].from_config(
@@ -42,6 +57,8 @@ class InterlivingSchedulerMethod(BaseMethod):
             algorithm_type=self.second_algorithm_type,
             final_sigmas_type=self.second_final_sigmas_type,
         )
+
+        self.model.set_timesteps()
 
     def generate(
         self,
@@ -130,6 +147,6 @@ class InterlivingSchedulerMethod(BaseMethod):
                 name_table=f"{self.config.experiment_name}",
                 additional_values={
                     "num_inference_steps_main": num_inference_steps_first,
-                    "num_inter_steps": ' '.join(list(map(str, interliving_steps))),
+                    "num_inter_steps": " ".join(list(map(str, interliving_steps))),
                 },
             )
