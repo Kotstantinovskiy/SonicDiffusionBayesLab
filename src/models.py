@@ -572,7 +572,7 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                         model_output = self.scheduler_second.convert_model_output(
                             noise_pred, sample=latents
                         )
-                        for i in range(self.scheduler_second.config.order - 1):
+                        for i in range(self.scheduler_second.config.solver_order - 1):
                             self.scheduler_second.model_outputs[i] = (
                                 self.scheduler_second.model_outputs[i + 1]
                             )
@@ -961,7 +961,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     model_output = self.scheduler_main.convert_model_output(
                         noise_pred, sample=latents
                     )
-                    for i in range(self.scheduler_main.config.order - 1):
+                    for i in range(self.scheduler_main.config.solver_order - 1):
                         self.scheduler_main.model_outputs[i] = (
                             self.scheduler_main.model_outputs[i + 1]
                         )
@@ -976,7 +976,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                         model_output = self.scheduler_inter.convert_model_output(
                             noise_pred, sample=latents
                         )
-                        for i in range(self.scheduler_inter.config.order - 1):
+                        for i in range(self.scheduler_inter.config.solver_order - 1):
                             self.scheduler_inter.model_outputs[i] = (
                                 self.scheduler_inter.model_outputs[i + 1]
                             )
@@ -996,7 +996,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     )
 
                 # call the callback, if provided
-                if i == self._num_timesteps - 1 or (i + 1) % self.scheduler.order == 0:
+                if i == self._num_timesteps - 1 or (i + 1) % self.scheduler_main.order == 0:
                     progress_bar.update()
 
                 """
