@@ -820,12 +820,16 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         timesteps_inter, num_inference_steps_inter = retrieve_timesteps(
             self.scheduler_inter, num_inference_steps, device, timesteps, sigmas
         )
+        print(timesteps_inter)
+
+        timesteps_main_tmp = self.insert_midpoints_tensor(timesteps_inter, device)
+        print(timesteps_main_tmp)
 
         timesteps_main, num_inference_steps_main = retrieve_timesteps(
             self.scheduler_main,
             num_inference_steps,
             device,
-            self.insert_midpoints_tensor(timesteps_inter, device),
+            timesteps_main_tmp,
             sigmas,
         )
         print(timesteps_inter)
