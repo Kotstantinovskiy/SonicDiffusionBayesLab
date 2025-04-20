@@ -63,7 +63,7 @@ class InterlivingSchedulerMethod(BaseMethod):
         print(f"Scheduler main: {self.main_order_solver}")
         print(f"Scheduler inter: {self.inter_order_solver}")
         print(
-            f"Order main: {self.model.scheduler_main.order}, Order inter: {self.model.scheduler_inter.order}"
+            f"Order main: {self.model.scheduler_main.config.solver_order}, Order inter: {self.model.scheduler_inter.order}"
         )
 
     def generate(
