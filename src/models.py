@@ -871,7 +871,28 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         # num_warmup_steps_second = len(timesteps_second) - num_inference_steps_second * self.scheduler_second.order
         self._num_timesteps = len(timesteps_main) - len(interliving_steps)
         start_time = time.time()
-
+        print(timesteps_main)
+        del_inter = []
+        t_inter = []
+        
+        for i, t in enumerate(timesteps_main):
+            if (
+                i - i % self.scheduler_main.solver_order
+            ) // self.scheduler_main.solver_order in interliving_steps:
+                if (
+                    i % self.scheduler_main.solver_order != 0
+                ):
+                    del_inter.append(i)
+                    print(f"Inter step: {t}")
+                
+                if (
+                    i % self.scheduler_main.solver_order == 0
+                ):
+                    t_inter.append(t)
+        
+        print(f"del_inter: {del_inter}")
+        print(f"t_inter: {t_inter}")
+            
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
             for i, t in enumerate(timesteps_main):
                 if self.interrupt:
