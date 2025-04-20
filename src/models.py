@@ -892,7 +892,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         
         print(f"del_inter: {del_inter}")
         print(f"t_inter: {t_inter}")
-        
+        print(timesteps_main)
         for d in del_inter:
             del timesteps_main[d]
             
