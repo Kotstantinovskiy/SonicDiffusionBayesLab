@@ -59,6 +59,8 @@ class InterlivingSchedulerMethod(BaseMethod):
             final_sigmas_type=self.inter_final_sigmas_type,
         )
 
+        print(f"Scheduler main: {self.main_order_solver}")
+        print(f"Scheduler inter: {self.inter_order_solver}")
         print(
             f"Order main: {self.model.scheduler_main.order}, Order inter: {self.model.scheduler_inter.order}"
         )
