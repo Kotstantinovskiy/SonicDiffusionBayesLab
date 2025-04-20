@@ -18,6 +18,7 @@ class DPMSolverScheduler(DPMSolverMultistepScheduler):
         variance_noise: Optional[torch.Tensor] = None,
         return_dict: bool = True,
     ):
+        print(self.timesteps)
         if self.num_inference_steps is None:
             raise ValueError(
                 "Number of inference steps is 'None', you need to run 'set_timesteps' after creating the scheduler"

@@ -968,6 +968,16 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     latents = self.scheduler_main.step(
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                     )[0]
+                    
+                    if isinstance(self.scheduler_inter, DPMSolverScheduler):
+                        model_output = self.scheduler_inter.convert_model_output(
+                            noise_pred, sample=latents
+                        )
+                        for i in range(self.scheduler_inter.config.solver_order - 1):
+                            self.scheduler_inter.model_outputs[i] = (
+                                self.scheduler_inter.model_outputs[i + 1]
+                            )
+                        self.scheduler_inter.model_outputs[-1] = model_output
                     print(f"Main step: {t}")
 
                 if callback_on_step_end is not None:
