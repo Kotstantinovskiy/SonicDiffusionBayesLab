@@ -58,8 +58,6 @@ class InterlivingSchedulerMethod(BaseMethod):
             final_sigmas_type=self.second_final_sigmas_type,
         )
 
-        self.model.set_timesteps()
-
     def generate(
         self,
         test_dataloader,
