@@ -818,17 +818,23 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
 
         # 4. Prepare timesteps
         timesteps_inter, num_inference_steps_inter = retrieve_timesteps(
-            self.scheduler_inter, num_inference_steps, device, timesteps, sigmas
+            self.scheduler_inter,
+            num_inference_steps // self.scheduler_main.order,
+            device,
+            timesteps,
+            sigmas,
         )
-        timesteps_main_tmp = self.insert_midpoints_tensor(timesteps_inter, device)
 
         timesteps_main, num_inference_steps_main = retrieve_timesteps(
             self.scheduler_main,
             num_inference_steps,
             device,
-            timesteps_main_tmp.to('cpu'),
+            timesteps,
             sigmas,
         )
+
+        print(f"Timesteps_main: {timesteps_main}")
+        print(f"Timesteps_inter: {timesteps_inter}")
 
         # Choose switch timestamp
         # timesteps_inter = timesteps_inter[interliving_steps]
@@ -871,31 +877,25 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         # num_warmup_steps_second = len(timesteps_second) - num_inference_steps_second * self.scheduler_second.order
         self._num_timesteps = len(timesteps_main) - len(interliving_steps)
         start_time = time.time()
-        print(timesteps_main)
+
         del_inter = []
         t_inter = []
-        
+
         for i, t in enumerate(timesteps_main):
             if (
                 i - i % self.scheduler_main.solver_order
             ) // self.scheduler_main.solver_order in interliving_steps:
-                if (
-                    i % self.scheduler_main.solver_order != 0
-                ):
+                if i % self.scheduler_main.solver_order != 0:
                     del_inter.append(i)
-                    print(f"Inter step: {t}")
-                
-                if (
-                    i % self.scheduler_main.solver_order == 0
-                ):
-                    t_inter.append(t)
-        
-        print(f"del_inter: {del_inter}")
-        print(f"t_inter: {t_inter}")
-        print(timesteps_main)
-        for d in del_inter:
-            timesteps_main = torch.cat((timesteps_main[:d], timesteps_main[d+1:]), dim=0)
 
+                if i % self.scheduler_main.solver_order == 0:
+                    t_inter.append(t)
+
+        for d in del_inter:
+            timesteps_main = torch.cat(
+                (timesteps_main[:d], timesteps_main[d + 1 :]), dim=0
+            )
+        print(f"Timesteps_main del: {timesteps_main}")
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
             for i, t in enumerate(timesteps_main):
                 if self.interrupt:
@@ -968,7 +968,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     latents = self.scheduler_main.step(
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                     )[0]
-                    
+
                     if isinstance(self.scheduler_inter, DPMSolverScheduler):
                         model_output = self.scheduler_inter.convert_model_output(
                             noise_pred, sample=latents
