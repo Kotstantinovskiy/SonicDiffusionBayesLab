@@ -820,10 +820,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         timesteps_inter, num_inference_steps_inter = retrieve_timesteps(
             self.scheduler_inter, num_inference_steps, device, timesteps, sigmas
         )
-        print(timesteps_inter)
-
         timesteps_main_tmp = self.insert_midpoints_tensor(timesteps_inter, device)
-        print(timesteps_main_tmp)
 
         timesteps_main, num_inference_steps_main = retrieve_timesteps(
             self.scheduler_main,
@@ -832,8 +829,6 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             timesteps_main_tmp.to('cpu'),
             sigmas,
         )
-        print(timesteps_inter)
-        print(timesteps_main)
 
         # Choose switch timestamp
         # timesteps_inter = timesteps_inter[interliving_steps]
@@ -876,8 +871,6 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         # num_warmup_steps_second = len(timesteps_second) - num_inference_steps_second * self.scheduler_second.order
         self._num_timesteps = len(timesteps_main) - len(interliving_steps)
         start_time = time.time()
-        print(f"Main timesteps: {timesteps_main}")
-        print(f"Inter timesteps: {interliving_steps}")
 
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
             for i, t in enumerate(timesteps_main):
@@ -891,11 +884,6 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     else latents
                 )
 
-                print(
-                    "STEP:",
-                    (i - i % self.scheduler_main.solver_order)
-                    // self.scheduler_main.solver_order,
-                )
                 if (
                     i - i % self.scheduler_main.solver_order
                 ) // self.scheduler_main.solver_order in interliving_steps:
