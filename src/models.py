@@ -830,12 +830,12 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
 
         timesteps_inter, num_inference_steps_inter = retrieve_timesteps(
             self.scheduler_inter,
-            num_inference_steps // self.scheduler_main.config.solver_orde,
+            num_inference_steps // self.scheduler_main.config.solver_order,
             device,
             timesteps,
             sigmas,
         )
-        print(num_inference_steps, self.scheduler_main.config.solver_orde)
+        print(num_inference_steps, self.scheduler_main.config.solver_order)
 
         print(f"Timesteps_main: {timesteps_main}")
         print(f"Timesteps_inter: {timesteps_inter}")
@@ -887,12 +887,12 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
 
         for i, t in enumerate(timesteps_main):
             if (
-                i - i % self.scheduler_main.config.solver_orde
-            ) // self.scheduler_main.config.solver_orde in interliving_steps:
-                if i % self.scheduler_main.config.solver_orde != 0:
+                i - i % self.scheduler_main.config.solver_order
+            ) // self.scheduler_main.config.solver_order in interliving_steps:
+                if i % self.scheduler_main.config.solver_order != 0:
                     del_inter.append(i)
 
-                if i % self.scheduler_main.config.solver_orde == 0:
+                if i % self.scheduler_main.config.solver_order == 0:
                     t_inter.append(t)
 
         for d in del_inter:
@@ -999,7 +999,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                 # call the callback, if provided
                 if (
                     i == self._num_timesteps - 1
-                    or (i + 1) % self.scheduler_main.config.solver_orde == 0
+                    or (i + 1) % self.scheduler_main.config.solver_order == 0
                 ):
                     progress_bar.update()
 
