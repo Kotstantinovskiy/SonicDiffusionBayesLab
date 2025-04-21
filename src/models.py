@@ -886,19 +886,18 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         t_inter = []
 
         for i, t in enumerate(timesteps_main):
-            if (
-                i - i % self.scheduler_main.config.solver_order
-            ) // self.scheduler_main.config.solver_order in interliving_steps:
+            if i // self.scheduler_main.config.solver_order in interliving_steps:
                 if i % self.scheduler_main.config.solver_order != 0:
                     del_inter.append(i)
 
                 if i % self.scheduler_main.config.solver_order == 0:
                     t_inter.append(t)
 
-        for d in del_inter:
-            timesteps_main = torch.cat(
-                (timesteps_main[:d], timesteps_main[d + 1 :]), dim=0
-            )
+        # delete values from tensor
+        mask = torch.ones(timesteps_main.size(0), dtype=torch.bool)
+        mask[del_inter] = False
+        timesteps_main = timesteps_main[mask]
+
         print(f"Timesteps_main del: {timesteps_main}")
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
             for i, t in enumerate(timesteps_main):
