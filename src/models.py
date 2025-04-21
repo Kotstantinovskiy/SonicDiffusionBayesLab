@@ -897,8 +897,8 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         mask = torch.ones(timesteps_main.size(0), dtype=torch.bool)
         mask[del_inter] = False
         timesteps_main = timesteps_main[mask]
-
         print(f"Timesteps_main del: {timesteps_main}")
+
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
             for i, t in enumerate(timesteps_main):
                 if self.interrupt:
