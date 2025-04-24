@@ -12,9 +12,9 @@ from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion import (
     retrieve_timesteps,
 )
 from diffusers.utils import deprecate
-from src.schedulers import DPMSolverScheduler
 
 from src.registry import models_registry
+from src.schedulers import DPMSolverScheduler
 
 
 @models_registry.add_to_registry("stable_diffusion_model")
@@ -248,10 +248,14 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     )
 
                 # compute the previous noisy sample x_t -> x_t-1
-
-                latents = self.scheduler.step(
+                step = self.scheduler.step(
                     noise_pred, t, latents, **extra_step_kwargs, return_dict=False
-                )[0]
+                )
+
+                if len(step) == 1:
+                    latents = step[0]
+                elif len(step) == 2:
+                    latents, x0_pred = step[0], step[1]
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -564,9 +568,14 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
 
                 # compute the previous noisy sample x_t -> x_t-1
                 if i < len(timesteps_first):
-                    latents = self.scheduler_first.step(
+                    step = self.scheduler_first.step(
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
-                    )[0]
+                    )
+
+                    if len(step) == 1:
+                        latents = step[0]
+                    elif len(step) == 2:
+                        latents, x0_pred = step[0], step[1]
 
                     if isinstance(self.scheduler_second, DPMSolverScheduler):
                         model_output = self.scheduler_second.convert_model_output(
@@ -578,9 +587,14 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                             )
                         self.scheduler_second.model_outputs[-1] = model_output
                 else:
-                    latents = self.scheduler_second.step(
+                    step = self.scheduler_second.step(
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
-                    )[0]
+                    )
+
+                    if len(step) == 1:
+                        latents = step[0]
+                    elif len(step) == 2:
+                        latents, x0_pred = step[0], step[1]
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -950,13 +964,18 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
 
                 # compute the previous noisy sample x_t -> x_t-1
                 if t in t_inter:
-                    latents = self.scheduler_inter.step(
+                    step = self.scheduler_inter.step(
                         noise_pred,
                         t,
                         latents,
                         **extra_step_kwargs,
                         return_dict=False,
-                    )[0]
+                    )
+
+                    if len(step) == 1:
+                        latents = step[0]
+                    elif len(step) == 2:
+                        latents, x0_pred = step[0], step[1]
 
                     model_output = self.scheduler_main.convert_model_output(
                         noise_pred, sample=latents
@@ -968,9 +987,14 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     self.scheduler_main.model_outputs[-1] = model_output
                     print(f"Inter step: {t}")
                 else:
-                    latents = self.scheduler_main.step(
+                    step = self.scheduler_main.step(
                         noise_pred, t, latents, **extra_step_kwargs, return_dict=False
-                    )[0]
+                    )
+
+                    if len(step) == 1:
+                        latents = step[0]
+                    elif len(step) == 2:
+                        latents, x0_pred = step[0], step[1]
 
                     if isinstance(self.scheduler_inter, DPMSolverScheduler):
                         model_output = self.scheduler_inter.convert_model_output(
