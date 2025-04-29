@@ -203,6 +203,7 @@ class StableDiffusionModel(StableDiffusionPipeline):
         # 7. Denoising loop
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
         self._num_timesteps = len(timesteps)
+        x0_pred = None
         start_time = time.time()
 
         with self.progress_bar(total=num_inference_steps) as progress_bar:
@@ -306,11 +307,15 @@ class StableDiffusionModel(StableDiffusionPipeline):
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return (image, has_nsfw_concept), execution_time
+            return (image, has_nsfw_concept), execution_time, x0_pred
 
-        return StableDiffusionPipelineOutput(
-            images=image, nsfw_content_detected=has_nsfw_concept
-        ), execution_time
+        return (
+            StableDiffusionPipelineOutput(
+                images=image, nsfw_content_detected=has_nsfw_concept
+            ),
+            execution_time,
+            x0_pred,
+        )
 
 
 @models_registry.add_to_registry("stable_diffusion_model_two_schedulers")
@@ -517,7 +522,7 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
         # num_warmup_steps_second = len(timesteps_second) - num_inference_steps_second * self.scheduler_second.order
         self._num_timesteps = len(timesteps_first) + len(timesteps_second)
         start_time = time.time()
-        first_step_second_scheduler = True
+        x0_pred = None
 
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
             for i, t in enumerate(timesteps_first + timesteps_second):
@@ -652,11 +657,15 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return (image, has_nsfw_concept), execution_time
+            return (image, has_nsfw_concept), execution_time, x0_pred
 
-        return StableDiffusionPipelineOutput(
-            images=image, nsfw_content_detected=has_nsfw_concept
-        ), execution_time
+        return (
+            StableDiffusionPipelineOutput(
+                images=image, nsfw_content_detected=has_nsfw_concept
+            ),
+            execution_time,
+            x0_pred,
+        )
 
     def switch_timestamp(
         self, timesteps_first, timesteps_second, num_step_switch, type_switch="closest"
@@ -911,6 +920,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         mask = torch.ones(timesteps_main.size(0), dtype=torch.bool)
         mask[del_inter] = False
         timesteps_main = timesteps_main[mask]
+        x0_pred = None
         print(f"Timesteps_main del: {timesteps_main}")
 
         with self.progress_bar(total=self._num_timesteps) as progress_bar:
@@ -1063,11 +1073,15 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return (image, has_nsfw_concept), execution_time
+            return (image, has_nsfw_concept), execution_time, x0_pred
 
-        return StableDiffusionPipelineOutput(
-            images=image, nsfw_content_detected=has_nsfw_concept
-        ), execution_time
+        return (
+            StableDiffusionPipelineOutput(
+                images=image, nsfw_content_detected=has_nsfw_concept
+            ),
+            execution_time,
+            x0_pred,
+        )
 
     def switch_timestamp(
         self, timesteps_first, timesteps_second, num_step_switch, type_switch="closest"

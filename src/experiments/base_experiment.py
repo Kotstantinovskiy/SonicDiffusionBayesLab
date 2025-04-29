@@ -130,7 +130,7 @@ class BaseMethod(ABC):
                 batch["image"],
                 batch["prompt"],
             )
-            diffusion_gen_imgs, inference_time = self.model(
+            diffusion_gen_imgs, inference_time, x0_pred = self.model(
                 prompts,
                 num_inference_steps=steps,
                 guidance_scale=guidance_scale,
