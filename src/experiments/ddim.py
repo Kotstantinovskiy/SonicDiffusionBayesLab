@@ -42,7 +42,7 @@ class DDIMMethod(BaseMethod):
                 x0_preds,
                 batch_size=batch_size,
                 shuffle=False,
-                collate_fn=self.collate_grid
+                collate_fn=self.collate_grid,
             )
 
             # update metrics
@@ -51,5 +51,7 @@ class DDIMMethod(BaseMethod):
                 gen_dataloader,
                 name_images=f"{self.config.experiment_name}, Inference steps: {steps}",
                 name_table=f"{self.config.experiment_name}",
-                x0_preds_dataloader=x0_preds_dataloader if self.config.experiment_params.get("use_x0", False) else None,
+                x0_preds_dataloader=x0_preds_dataloader
+                if self.config.experiment_params.get("use_x0", False)
+                else None,
             )

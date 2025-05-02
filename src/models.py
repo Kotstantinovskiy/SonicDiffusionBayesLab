@@ -311,7 +311,6 @@ class StableDiffusionModel(StableDiffusionPipeline):
         # Offload all models
         self.maybe_free_model_hooks()
         print(x0_preds)
-        print(x0_preds[0].shape)
         if not return_dict:
             return (image, has_nsfw_concept), execution_time, x0_preds
 
@@ -588,7 +587,9 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                     elif len(step) == 2:
                         latents, x0_pred = step[0], step[1]
                         if x0_pred.dim() == 4:  # (B, C, H, W)
-                            x0_preds.append([latent_img.cpu() for latent_img in x0_pred])
+                            x0_preds.append(
+                                [latent_img.cpu() for latent_img in x0_pred]
+                            )
                         else:
                             x0_preds.append(x0_pred.cpu())
 
@@ -611,7 +612,9 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                     elif len(step) == 2:
                         latents, x0_pred = step[0], step[1]
                         if x0_pred.dim() == 4:  # (B, C, H, W)
-                            x0_preds.append([latent_img.cpu() for latent_img in x0_pred])
+                            x0_preds.append(
+                                [latent_img.cpu() for latent_img in x0_pred]
+                            )
                         else:
                             x0_preds.append(x0_pred.cpu())
 
@@ -1001,7 +1004,9 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     elif len(step) == 2:
                         latents, x0_pred = step[0], step[1]
                         if x0_pred.dim() == 4:  # (B, C, H, W)
-                            x0_preds.append([latent_img.cpu() for latent_img in x0_pred])
+                            x0_preds.append(
+                                [latent_img.cpu() for latent_img in x0_pred]
+                            )
                         else:
                             x0_preds.append(x0_pred.cpu())
 
@@ -1024,7 +1029,9 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                     elif len(step) == 2:
                         latents, x0_pred = step[0], step[1]
                         if x0_pred.dim() == 4:  # (B, C, H, W)
-                            x0_preds.append([latent_img.cpu() for latent_img in x0_pred])
+                            x0_preds.append(
+                                [latent_img.cpu() for latent_img in x0_pred]
+                            )
                         else:
                             x0_preds.append(x0_pred.cpu())
 
@@ -1104,6 +1111,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             execution_time,
             x0_preds,
         )
+
 
 @models_registry.add_to_registry("stable_diffusion_model_skip_timesteps")
 class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
@@ -1303,7 +1311,6 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
 
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
-
                 if i in skip_timesteps:
                     print(f"Skipping timestep {i}, {t}")
                     continue
@@ -1410,7 +1417,6 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
         # Offload all models
         self.maybe_free_model_hooks()
         print(x0_preds)
-        print(x0_preds[0].shape)
         if not return_dict:
             return (image, has_nsfw_concept), execution_time, x0_preds
 

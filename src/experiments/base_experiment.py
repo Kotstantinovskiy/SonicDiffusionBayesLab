@@ -119,7 +119,13 @@ class BaseMethod(ABC):
             run_id=self.config.logger.get("run_id", None),
         )
 
-    def generate(self, test_dataloader: DataLoader, steps: int, batch_size: int = 1, guidance_scale: float = 7.5) -> tuple[list, list]:
+    def generate(
+        self,
+        test_dataloader: DataLoader,
+        steps: int,
+        batch_size: int = 1,
+        guidance_scale: float = 7.5,
+    ) -> tuple[list, list]:
         gen_images_list: list = []
         for idx, batch in enumerate(
             tqdm(
@@ -266,7 +272,7 @@ class BaseMethod(ABC):
 
     def collate_grid(self, batch):
         print(batch)
-        #x0_preds = batch[0]
+        # x0_preds = batch[0]
         grid_images = []
         for timestep_images in zip(*batch):
             images_stack = torch.stack(list(timestep_images))

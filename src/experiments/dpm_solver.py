@@ -37,7 +37,9 @@ class DPMSolverMethod(BaseMethod):
         self.metric_dict = defaultdict(list)
         for idx_step, steps in enumerate(self.num_inference_steps):
             self.model.to(self.device)
-            gen_images, x0_preds = self.generate(test_dataloader, steps, self.batch_size)
+            gen_images, x0_preds = self.generate(
+                test_dataloader, steps, self.batch_size
+            )
             self.model.to("cpu")
 
             print("x0_preds", x0_preds)
@@ -52,7 +54,7 @@ class DPMSolverMethod(BaseMethod):
                 x0_preds,
                 batch_size=self.batch_size,
                 shuffle=False,
-                collate_fn=self.collate_grid
+                collate_fn=self.collate_grid,
             )
 
             # update metrics
@@ -61,5 +63,7 @@ class DPMSolverMethod(BaseMethod):
                 gen_dataloader,
                 name_images=f"{self.config.experiment_name}, Solver order: {self.solver_order}, Inference steps: {steps}",
                 name_table=f"{self.config.experiment_name}",
-                x0_preds_dataloader=x0_preds_dataloader if self.config.experiment_params.get("use_x0", False) else None,
+                x0_preds_dataloader=x0_preds_dataloader
+                if self.config.experiment_params.get("use_x0", False)
+                else None,
             )

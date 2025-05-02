@@ -7,63 +7,22 @@ from src.experiments.base_experiment import BaseMethod
 from src.registry import methods_registry, schedulers_registry
 
 
-@methods_registry.add_to_registry("interliving_schedulers")
-class InterlivingSchedulerMethod(BaseMethod):
+@methods_registry.add_to_registry("skip_steps")
+class SkipStepsMethod(BaseMethod):
     def setup_exp_params(self):
-        self.num_inference_steps_first = (
-            self.config.experiment_params.num_inference_steps_first
-        )
-        self.interliving_steps = self.config.experiment_params.interliving_steps
-
-        self.main_order_solver = self.config.experiment_params.get(
-            "main_order_solver", ""
-        )
-        self.inter_order_solver = self.config.experiment_params.get(
-            "inter_order_solver", ""
-        )
-
-        self.main_algorithm_type = self.config.experiment_params.get(
-            "main_algorithm_type", ""
-        )
-        self.inter_algorithm_type = self.config.experiment_params.get(
-            "inter_algorithm_type", ""
-        )
-
-        self.main_final_sigmas_type = self.config.experiment_params.get(
-            "main_final_sigmas_type", ""
-        )
-        self.inter_final_sigmas_type = self.config.experiment_params.get(
-            "inter_final_sigmas_type", ""
-        )
+        self.skip_steps = self.config.experiment_params.skip_steps
+        self.num_inference_steps = self.config.experiment_params.num_inference_steps
+        self.solver_order = self.config.experiment_params.solver_order
+        self.algorithm_type = self.config.experiment_params.algorithm_type
+        self.final_sigmas_type = self.config.experiment_params.final_sigmas_type
 
         self.batch_size = self.config.inference.get("batch_size", 1)
 
-    def setup_scheduler(self):
-        scheduler_first_name = self.config.scheduler.scheduler_main
-        scheduler_second_name = self.config.scheduler.scheduler_inter
-
-        base_config = dict(self.model.scheduler.config)
-        base_config["solver_order"] = self.main_order_solver
-        base_config["algorithm_type"] = self.main_algorithm_type
-        base_config["final_sigmas_type"] = self.main_final_sigmas_type
-
-        self.model.scheduler_main = schedulers_registry[
-            scheduler_first_name
-        ].from_config(base_config)
-
-        base_config = dict(self.model.scheduler.config)
-        base_config["solver_order"] = self.inter_order_solver
-        base_config["algorithm_type"] = self.inter_algorithm_type
-        base_config["final_sigmas_type"] = self.inter_final_sigmas_type
-
-        self.model.scheduler_inter = schedulers_registry[
-            scheduler_second_name
-        ].from_config(base_config)
-
-        print(f"Scheduler main: {self.main_order_solver}")
-        print(f"Scheduler inter: {self.inter_order_solver}")
-        print(
-            f"Order main: {self.model.scheduler_main.config.solver_order}, Order inter: {self.model.scheduler_inter.order}"
+    def setup_scheduler(self, **kwargs):
+        return super().setup_scheduler(
+            solver_order=self.solver_order,
+            algorithm_type=self.algorithm_type,
+            final_sigmas_type=self.final_sigmas_type,
         )
 
     def generate(
@@ -92,7 +51,7 @@ class InterlivingSchedulerMethod(BaseMethod):
                 guidance_scale=guidance_scale,
                 generator=self.generator,
                 num_inference_steps=num_inference_steps,
-                interliving_steps=interliving_steps,
+                skip_timesteps=self.skip_steps,
                 output_type="pt",
             )
             diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
@@ -145,12 +104,7 @@ class InterlivingSchedulerMethod(BaseMethod):
                 shuffle=False,
             )
 
-            x0_preds_dataloader = DataLoader(
-                x0_preds,
-                batch_size=self.batch_size,
-                shuffle=False,
-                collate_fn=self.collate_grid,
-            )
+            x0_preds_dataloader = None
 
             # update metrics
             self.validate(
