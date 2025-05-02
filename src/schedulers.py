@@ -146,7 +146,7 @@ class DPMSolverScheduler(DPMSolverMultistepScheduler):
         else:
             noise = None
 
-        print(f"Model outputs: {len(self.model_outputs)}")
+        # print(f"Model outputs: {len(self.model_outputs)}")
 
         if (
             self.config.solver_order == 1
