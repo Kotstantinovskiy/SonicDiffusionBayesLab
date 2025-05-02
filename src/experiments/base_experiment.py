@@ -6,6 +6,8 @@ import torch
 from omegaconf import OmegaConf
 from torchvision import transforms
 from tqdm import tqdm
+from torch.utils.data import DataLoader
+from torchvision.utils import make_grid
 
 from src.dataset.dataset import ImageDatasetWithPrompts
 from src.loggers.wandb import Logger
@@ -54,6 +56,7 @@ class BaseMethod(ABC):
         model_name = self.config.model.model_name
         self.model = models_registry[model_name].from_pretrained(
             self.config.model.pretrained_model,
+            timestamps=self.config.model.get("timestamps", None),
             safety_checker=None,
             requires_safety_checker=False,
             torch_dtype=torch.float16,
@@ -116,7 +119,7 @@ class BaseMethod(ABC):
             run_id=self.config.logger.get("run_id", None),
         )
 
-    def generate(self, test_dataloader, steps, batch_size=1, guidance_scale=7.5):
+    def generate(self, test_dataloader: DataLoader, steps: int, batch_size: int = 1, guidance_scale: float = 7.5) -> tuple[list, list]:
         gen_images_list: list = []
         for idx, batch in enumerate(
             tqdm(
@@ -130,7 +133,7 @@ class BaseMethod(ABC):
                 batch["image"],
                 batch["prompt"],
             )
-            diffusion_gen_imgs, inference_time, x0_pred = self.model(
+            diffusion_gen_imgs, inference_time, x0_preds = self.model(
                 prompts,
                 num_inference_steps=steps,
                 guidance_scale=guidance_scale,
@@ -148,7 +151,7 @@ class BaseMethod(ABC):
             # update speed metrics
             self.time_metric.update(inference_time, batch_size)
 
-        return gen_images_list
+        return gen_images_list, x0_preds
 
     def validate(
         self,
@@ -157,15 +160,27 @@ class BaseMethod(ABC):
         name_images,
         name_table,
         additional_values: dict = None,
+        x0_preds_dataloader: DataLoader | None = None,
     ):
         self.clip_score_gen_metric.to(self.device)
         self.fid_metric.to(self.device)
 
-        for idx, (input_batch, gen_images) in tqdm(
-            enumerate(zip(test_dataloader, gen_dataloader)),
+        if x0_preds_dataloader is not None:
+            data_iter = zip(test_dataloader, gen_dataloader, x0_preds_dataloader)
+        else:
+            data_iter = zip(test_dataloader, gen_dataloader)
+
+        for idx, batch in tqdm(
+            enumerate(data_iter),
             total=len(test_dataloader),
             desc="Calculating metrics...",
         ):
+            if x0_preds_dataloader is not None:
+                input_batch, gen_images, x0_preds = batch
+            else:
+                input_batch, gen_images = batch
+                x0_preds = None
+
             image_files, real_images, prompts = (
                 input_batch["image_file"],
                 input_batch["image"],
@@ -181,13 +196,22 @@ class BaseMethod(ABC):
             self.fid_metric.update(gen_images.to(self.device), real=False)
             self.fid_metric.update(real_images.to(self.device), real=True)
 
-            if idx % self.config.logger.log_images_step == 0:
+            if idx % self.config.logger.get("log_images_step", 1) == 0:
                 number_save_images = self.config.experiment.get("number_save_images", 8)
 
                 self.logger.log_batch_of_images(
                     images=gen_images[:number_save_images],
                     name_images=name_images,
                     captions=prompts[:number_save_images],
+                )
+
+            if x0_preds and idx % self.config.logger.get("log_x0_step", 1) == 0:
+                number_x0 = self.config.experiment.get("number_x0", 1)
+
+                self.logger.log_batch_of_images(
+                    images=x0_preds[:number_x0],
+                    name_images=name_images,
+                    captions=prompts[:number_x0],
                 )
 
             if self.config.logger.save:
@@ -239,3 +263,13 @@ class BaseMethod(ABC):
         self.clip_score_gen_metric.reset()
         self.image_reward_metric.reset()
         self.time_metric.reset()
+
+    def collate_grid(self, batch):
+        print(batch)
+        #x0_preds = batch[0]
+        grid_images = []
+        for timestep_images in zip(*batch):
+            images_stack = torch.stack(list(timestep_images))
+            grid = make_grid(images_stack, nrow=8, normalize=True, padding=2)
+            grid_images.append(grid)
+        return grid_images

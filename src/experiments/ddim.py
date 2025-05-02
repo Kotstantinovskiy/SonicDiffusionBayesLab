@@ -1,6 +1,8 @@
 from collections import defaultdict
 
 from torch.utils.data import DataLoader
+from torchvision.utils import make_grid
+import torch
 
 from src.experiments.base_experiment import BaseMethod
 from src.registry import methods_registry
@@ -27,7 +29,7 @@ class DDIMMethod(BaseMethod):
         self.metric_dict = defaultdict(list)
         for idx_step, steps in enumerate(self.num_inference_steps):
             self.model.to(self.device)
-            gen_images = self.generate(test_dataloader, steps, batch_size)
+            gen_images, x0_preds = self.generate(test_dataloader, steps, batch_size)
             self.model.to("cpu")
 
             gen_dataloader = DataLoader(
@@ -36,10 +38,18 @@ class DDIMMethod(BaseMethod):
                 shuffle=False,
             )
 
+            x0_preds_dataloader = DataLoader(
+                x0_preds,
+                batch_size=batch_size,
+                shuffle=False,
+                collate_fn=self.collate_grid
+            )
+
             # update metrics
             self.validate(
                 test_dataloader,
                 gen_dataloader,
                 name_images=f"{self.config.experiment_name}, Inference steps: {steps}",
                 name_table=f"{self.config.experiment_name}",
+                x0_preds_dataloader=x0_preds_dataloader,
             )

@@ -1,6 +1,7 @@
 import logging
 import os
 from collections import defaultdict
+from torchvision.utils import make_grid
 
 import pandas as pd
 
@@ -32,12 +33,14 @@ class WandbLogger:
             }
         else:
             wandb_images = {name_images: [wandb.Image(img) for img in images]}
+
         self.run.log(wandb_images)
 
     def log_tables(self, tables: dict[str, pd.DataFrame]):
         wandb_tables = {
             name: wandb.Table(dataframe=table) for name, table in tables.items()
         }
+
         self.run.log(wandb_tables)
 
 
@@ -86,11 +89,3 @@ class Logger:
             images=images,
             captions=captions,
         )
-
-    """
-    def update_losses(self, losses_dict, epoch, step):
-        self.losses_memory["Epoch"].append(epoch)
-        self.losses_memory["Step"].append(step)
-        for loss_name, loss_val in losses_dict.items():
-            self.losses_memory[loss_name].append(loss_val)
-    """

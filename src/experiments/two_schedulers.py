@@ -83,7 +83,7 @@ class TwoSchedulerMethod(BaseMethod):
                 batch["image"],
                 batch["prompt"],
             )
-            diffusion_gen_imgs, inference_time = self.model(
+            diffusion_gen_imgs, inference_time, x0_preds = self.model(
                 prompts,
                 guidance_scale=guidance_scale,
                 generator=self.generator,
@@ -104,7 +104,7 @@ class TwoSchedulerMethod(BaseMethod):
             # update speed metrics
             self.time_metric.update(inference_time, batch_size)
 
-        return gen_images_list
+        return gen_images_list, x0_preds
 
     def run_experiment(self):
         # self.model.scheduler_first = DPMSolverMultistepScheduler.from_config(
@@ -131,7 +131,7 @@ class TwoSchedulerMethod(BaseMethod):
             self.num_step_switch,
         ):
             self.model.to(self.device)
-            gen_images = self.generate(
+            gen_images, x0_preds = self.generate(
                 test_dataloader,
                 num_inference_steps_first,
                 num_inference_steps_second,
@@ -146,6 +146,13 @@ class TwoSchedulerMethod(BaseMethod):
                 shuffle=False,
             )
 
+            x0_preds_dataloader = DataLoader(
+                x0_preds,
+                batch_size=self.batch_size,
+                shuffle=False,
+                collate_fn=self.collate_grid
+            )
+
             # update metrics
             self.validate(
                 test_dataloader,
@@ -157,4 +164,5 @@ class TwoSchedulerMethod(BaseMethod):
                     "num_inference_steps_second": num_inference_steps_second,
                     "switch_step": num_step_switch,
                 },
+                x0_preds_dataloader=x0_preds_dataloader,
             )

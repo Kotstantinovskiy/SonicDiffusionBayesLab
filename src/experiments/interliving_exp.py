@@ -87,7 +87,7 @@ class InterlivingSchedulerMethod(BaseMethod):
                 batch["image"],
                 batch["prompt"],
             )
-            diffusion_gen_imgs, inference_time = self.model(
+            diffusion_gen_imgs, inference_time, x0_preds = self.model(
                 prompts,
                 guidance_scale=guidance_scale,
                 generator=self.generator,
@@ -106,7 +106,7 @@ class InterlivingSchedulerMethod(BaseMethod):
             # update speed metrics
             self.time_metric.update(inference_time, batch_size)
 
-        return gen_images_list
+        return gen_images_list, x0_preds
 
     def run_experiment(self):
         # self.model.scheduler_first = DPMSolverMultistepScheduler.from_config(
@@ -131,7 +131,7 @@ class InterlivingSchedulerMethod(BaseMethod):
             self.interliving_steps,
         ):
             self.model.to(self.device)
-            gen_images = self.generate(
+            gen_images, x0_preds = self.generate(
                 test_dataloader=test_dataloader,
                 num_inference_steps=num_inference_steps_first,
                 interliving_steps=interliving_steps,
@@ -145,6 +145,13 @@ class InterlivingSchedulerMethod(BaseMethod):
                 shuffle=False,
             )
 
+            x0_preds_dataloader = DataLoader(
+                x0_preds,
+                batch_size=self.batch_size,
+                shuffle=False,
+                collate_fn=self.collate_grid
+            )
+
             # update metrics
             self.validate(
                 test_dataloader,
@@ -155,4 +162,5 @@ class InterlivingSchedulerMethod(BaseMethod):
                     "num_inference_steps_main": num_inference_steps_first,
                     "num_inter_steps": " ".join(list(map(str, interliving_steps))),
                 },
+                x0_preds_dataloader=x0_preds_dataloader,
             )
