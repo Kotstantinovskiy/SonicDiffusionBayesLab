@@ -93,8 +93,6 @@ class DPMSolverScheduler(DPMSolverMultistepScheduler):
             alpha_t, sigma_t = self._sigma_to_alpha_sigma_t(sigma)
             x0_pred = (sample - sigma_t * epsilon) / alpha_t
 
-            print("shape x0_pred", (x0_pred).shape)
-
             return epsilon, x0_pred
 
     def step(
