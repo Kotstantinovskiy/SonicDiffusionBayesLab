@@ -89,6 +89,8 @@ class DPMSolverScheduler(DPMSolverMultistepScheduler):
                 x0_pred = self._threshold_sample(x0_pred)
                 epsilon = (sample - alpha_t * x0_pred) / sigma_t
 
+            print("shape x0_pred", ((sample - sigma_t * epsilon) / alpha_t).shape)
+            
             return epsilon, (sample - sigma_t * epsilon) / alpha_t
 
     def step(
