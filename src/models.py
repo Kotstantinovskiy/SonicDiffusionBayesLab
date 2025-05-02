@@ -1369,6 +1369,8 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                     else:
                         x0_preds.append(x0_pred.cpu())
 
+                x0_preds = []
+
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
                     for k in callback_on_step_end_tensor_inputs:
