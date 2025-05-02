@@ -37,7 +37,7 @@ class DeepCacheMethod(BaseMethod):
             self.metric_dict = defaultdict(list)
             for idx_step, steps in enumerate(self.num_inference_steps):
                 self.model.to(self.device)
-                gen_images = self.generate(test_dataloader, steps, batch_size)
+                gen_images, x0_preds = self.generate(test_dataloader, steps, batch_size)
                 self.model.to("cpu")
 
                 gen_dataloader = DataLoader(
