@@ -20,12 +20,12 @@ from src.schedulers import DPMSolverScheduler
 @models_registry.add_to_registry("stable_diffusion_model")
 class StableDiffusionModel(StableDiffusionPipeline):
     def __call__(self, *args, return_execution_time=True, **kwargs):
-        result, execution_time = self.call(*args, **kwargs)
+        result, execution_time, x0_preds = self.call(*args, **kwargs)
 
         if return_execution_time:
-            return result, execution_time
+            return result, execution_time, x0_preds
 
-        return result
+        return result, x0_preds
 
     @torch.no_grad()
     def call(
@@ -326,12 +326,12 @@ class StableDiffusionModel(StableDiffusionPipeline):
 @models_registry.add_to_registry("stable_diffusion_model_two_schedulers")
 class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
     def __call__(self, *args, return_execution_time=True, **kwargs):
-        result, execution_time = self.call(*args, **kwargs)
+        result, execution_time, x0_preds = self.call(*args, **kwargs)
 
         if return_execution_time:
-            return result, execution_time
+            return result, execution_time, x0_preds
 
-        return result
+        return result, x0_preds
 
     @torch.no_grad()
     def call(
@@ -716,12 +716,12 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
 @models_registry.add_to_registry("stable_diffusion_model_interliving_schedulers")
 class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
     def __call__(self, *args, return_execution_time=True, **kwargs):
-        result, execution_time = self.call(*args, **kwargs)
+        result, execution_time, x0_preds = self.call(*args, **kwargs)
 
         if return_execution_time:
-            return result, execution_time
+            return result, execution_time, x0_preds
 
-        return result
+        return result, x0_preds
 
     @torch.no_grad()
     def call(
@@ -1116,12 +1116,12 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
 @models_registry.add_to_registry("stable_diffusion_model_skip_timesteps")
 class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
     def __call__(self, *args, return_execution_time=True, **kwargs):
-        result, execution_time = self.call(*args, **kwargs)
+        result, execution_time, x0_preds = self.call(*args, **kwargs)
 
         if return_execution_time:
-            return result, execution_time
+            return result, execution_time, x0_preds
 
-        return result
+        return result, x0_preds
 
     @torch.no_grad()
     def call(
@@ -1416,7 +1416,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
 
         # Offload all models
         self.maybe_free_model_hooks()
-        print(x0_preds)
+        print("X0_preds", x0_preds)
         if not return_dict:
             return (image, has_nsfw_concept), execution_time, x0_preds
 
