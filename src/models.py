@@ -310,7 +310,7 @@ class StableDiffusionModel(StableDiffusionPipeline):
 
         # Offload all models
         self.maybe_free_model_hooks()
-        print(x0_preds)
+        #print(x0_preds)
         if not return_dict:
             return (image, has_nsfw_concept), execution_time, x0_preds
 
@@ -1416,7 +1416,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
 
         # Offload all models
         self.maybe_free_model_hooks()
-        print("X0_preds", x0_preds)
+
         if not return_dict:
             return (image, has_nsfw_concept), execution_time, x0_preds
 
