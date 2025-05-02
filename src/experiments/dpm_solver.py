@@ -61,5 +61,5 @@ class DPMSolverMethod(BaseMethod):
                 gen_dataloader,
                 name_images=f"{self.config.experiment_name}, Solver order: {self.solver_order}, Inference steps: {steps}",
                 name_table=f"{self.config.experiment_name}",
-                x0_preds_dataloader=x0_preds_dataloader,
+                x0_preds_dataloader=x0_preds_dataloader if self.config.experiment_params.get("use_x0", False) else None,
             )

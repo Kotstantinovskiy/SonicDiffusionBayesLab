@@ -164,5 +164,5 @@ class TwoSchedulerMethod(BaseMethod):
                     "num_inference_steps_second": num_inference_steps_second,
                     "switch_step": num_step_switch,
                 },
-                x0_preds_dataloader=x0_preds_dataloader,
+                x0_preds_dataloader=x0_preds_dataloader if self.config.experiment_params.get("use_x0", False) else None,
             )

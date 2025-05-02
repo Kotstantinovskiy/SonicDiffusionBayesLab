@@ -162,5 +162,5 @@ class InterlivingSchedulerMethod(BaseMethod):
                     "num_inference_steps_main": num_inference_steps_first,
                     "num_inter_steps": " ".join(list(map(str, interliving_steps))),
                 },
-                x0_preds_dataloader=x0_preds_dataloader,
+                x0_preds_dataloader=x0_preds_dataloader if self.config.experiment_params.get("use_x0", False) else None,
             )
