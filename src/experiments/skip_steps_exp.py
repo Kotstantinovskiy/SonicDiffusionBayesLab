@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from src.experiments.base_experiment import BaseMethod
-from src.registry import methods_registry, schedulers_registry
+from src.registry import methods_registry
 
 
 @methods_registry.add_to_registry("skip_steps")
@@ -29,7 +29,7 @@ class SkipStepsMethod(BaseMethod):
         self,
         test_dataloader,
         num_inference_steps,
-        interliving_steps,
+        skip_steps,
         batch_size=1,
         guidance_scale=7.5,
     ):
@@ -51,7 +51,7 @@ class SkipStepsMethod(BaseMethod):
                 guidance_scale=guidance_scale,
                 generator=self.generator,
                 num_inference_steps=num_inference_steps,
-                skip_timesteps=self.skip_steps,
+                skip_timesteps=skip_steps,
                 output_type="pt",
             )
             diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
@@ -83,17 +83,17 @@ class SkipStepsMethod(BaseMethod):
 
         self.metric_dict = defaultdict(list)
         for (
-            num_inference_steps_first,
-            interliving_steps,
+            num_inference_steps,
+            skip_steps,
         ) in zip(
-            self.num_inference_steps_first,
-            self.interliving_steps,
+            self.num_inference_steps,
+            self.skip_steps,
         ):
             self.model.to(self.device)
             gen_images, x0_preds = self.generate(
                 test_dataloader=test_dataloader,
-                num_inference_steps=num_inference_steps_first,
-                interliving_steps=interliving_steps,
+                num_inference_steps=num_inference_steps,
+                skip_steps=skip_steps,
                 batch_size=self.batch_size,
             )
             self.model.to("cpu")
@@ -110,11 +110,11 @@ class SkipStepsMethod(BaseMethod):
             self.validate(
                 test_dataloader,
                 gen_dataloader,
-                name_images=f"{self.config.experiment_name}, Step main: {num_inference_steps_first}, Inter steps:{' '.join(list(map(str, interliving_steps)))}",
+                name_images=f"{self.config.experiment_name}, Step main: {num_inference_steps}, Skip steps:{' '.join(list(map(str, skip_steps)))}",
                 name_table=f"{self.config.experiment_name}",
                 additional_values={
-                    "num_inference_steps_main": num_inference_steps_first,
-                    "num_inter_steps": " ".join(list(map(str, interliving_steps))),
+                    "num_inference_steps": num_inference_steps,
+                    "skip_steps": " ".join(list(map(str, skip_steps))),
                 },
                 x0_preds_dataloader=x0_preds_dataloader
                 if self.config.experiment_params.get("use_x0", False)
