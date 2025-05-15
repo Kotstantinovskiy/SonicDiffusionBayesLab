@@ -1360,6 +1360,8 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                     noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                 )
 
+                print(step[1].shape)
+
                 if len(step) == 1:
                     latents = step[0]
                 elif len(step) == 2:
@@ -1401,9 +1403,17 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                 return_dict=False,
                 generator=generator,
             )[0]
-            image, has_nsfw_concept = self.run_safety_checker(
-                image, device, prompt_embeds.dtype
-            )
+            has_nsfw_concept = None
+            '''
+            image_x0_preds = []
+            for x0_pred in x0_preds:
+                image_x0_pred = self.vae.decode(
+                    x0_pred / self.vae.config.scaling_factor,
+                    return_dict=False,
+                    generator=generator,
+                )[0]
+                image_x0_preds.append(image_x0_pred)
+            '''
         else:
             image = latents
             has_nsfw_concept = None
@@ -1412,10 +1422,19 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
             do_denormalize = [True] * image.shape[0]
         else:
             do_denormalize = [not has_nsfw for has_nsfw in has_nsfw_concept]
+    
         image = self.image_processor.postprocess(
             image, output_type=output_type, do_denormalize=do_denormalize
         )
 
+        '''
+        image_x0_preds_processed = []
+        for image_x0_pred in image_x0_preds:
+            image_x0_pred = self.image_processor.postprocess(
+                image_x0_pred, output_type=output_type, do_denormalize=[True] * image_x0_pred.shape[0]
+            )
+            image_x0_preds_processed.append(image_x0_pred)
+        '''
         # Offload all models
         self.maybe_free_model_hooks()
 
