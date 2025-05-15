@@ -1367,11 +1367,11 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                 elif len(step) == 2:
                     latents, x0_pred = step[0], step[1]
                     if x0_pred.dim() == 4:  # (B, C, H, W)
-                        x0_preds.append([latent_img.cpu() for latent_img in x0_pred])
+                        x0_preds.append([x0_pred[0]])
                     else:
                         x0_preds.append(x0_pred.cpu())
 
-                x0_preds = []
+                #x0_preds = []
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -1404,7 +1404,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                 generator=generator,
             )[0]
             has_nsfw_concept = None
-            '''
+            
             image_x0_preds = []
             for x0_pred in x0_preds:
                 image_x0_pred = self.vae.decode(
@@ -1413,7 +1413,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                     generator=generator,
                 )[0]
                 image_x0_preds.append(image_x0_pred)
-            '''
+            
         else:
             image = latents
             has_nsfw_concept = None
@@ -1427,24 +1427,23 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
             image, output_type=output_type, do_denormalize=do_denormalize
         )
 
-        '''
         image_x0_preds_processed = []
         for image_x0_pred in image_x0_preds:
             image_x0_pred = self.image_processor.postprocess(
                 image_x0_pred, output_type=output_type, do_denormalize=[True] * image_x0_pred.shape[0]
             )
             image_x0_preds_processed.append(image_x0_pred)
-        '''
+
         # Offload all models
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return (image, has_nsfw_concept), execution_time, x0_preds
+            return (image, has_nsfw_concept), execution_time, image_x0_preds_processed
 
         return (
             StableDiffusionPipelineOutput(
                 images=image, nsfw_content_detected=has_nsfw_concept
             ),
             execution_time,
-            x0_preds,
+            image_x0_preds_processed,
         )

@@ -54,6 +54,7 @@ class SkipStepsMethod(BaseMethod):
                 skip_timesteps=skip_steps,
                 output_type="pt",
             )
+            print("X0 preds", len(x0_preds))
             diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
 
             gen_images = [
