@@ -1,4 +1,5 @@
 import time
+from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
@@ -1366,9 +1367,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                     latents = step[0]
                 elif len(step) == 2:
                     latents, x0_pred = step[0], step[1]
-                    print("x0_pred shape", x0_pred.shape)
-                    x0_preds.append(x0_pred[0])
-        
+                    x0_preds.append(x0_pred[0].unsqueeze(0))
 
                 #x0_preds = []
 
@@ -1406,6 +1405,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
             print("Latents shape", latents.shape)
             image_x0_preds = []
             for x0_pred in x0_preds:
+                print("x0_pred shape", x0_pred.shape)
                 x0_pred = self.vae.decode(
                     x0_pred / self.vae.config.scaling_factor,
                     return_dict=False,
@@ -1427,13 +1427,11 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
         )
 
         image_x0_preds_processed = []
-        '''
         for image_x0_pred in image_x0_preds:
             image_x0_pred = self.image_processor.postprocess(
                 image_x0_pred, output_type=output_type, do_denormalize=[True] * image_x0_pred.shape[0]
             )
             image_x0_preds_processed.append(image_x0_pred)
-        '''
 
         # Offload all models
         self.maybe_free_model_hooks()
