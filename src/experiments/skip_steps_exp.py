@@ -34,6 +34,7 @@ class SkipStepsMethod(BaseMethod):
         guidance_scale=7.5,
     ):
         gen_images_list: list = []
+        x0_preds_list: list = []
         for idx, batch in enumerate(
             tqdm(
                 test_dataloader,
@@ -58,6 +59,8 @@ class SkipStepsMethod(BaseMethod):
                 output_type="pt",
             )
 
+            x0_preds_list.extend(x0_preds)
+
             print("X0 preds", len(x0_preds))
 
             diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
@@ -71,7 +74,7 @@ class SkipStepsMethod(BaseMethod):
             # update speed metrics
             self.time_metric.update(inference_time, batch_size)
 
-        return gen_images_list, x0_preds
+        return gen_images_list, x0_preds_list
 
     def run_experiment(self):
         # self.model.scheduler_first = DPMSolverMultistepScheduler.from_config(
