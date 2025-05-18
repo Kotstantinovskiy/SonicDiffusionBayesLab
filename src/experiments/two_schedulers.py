@@ -78,6 +78,9 @@ class TwoSchedulerMethod(BaseMethod):
                 desc="Experiment",
             )
         ):
+            if self.config.inference.get("batch_count", None) is not None and idx >= self.config.inference.get("batch_count", None):
+                break
+
             image_file, real_images, prompts = (
                 batch["image_file"],
                 batch["image"],
