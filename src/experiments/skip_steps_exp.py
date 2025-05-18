@@ -57,7 +57,9 @@ class SkipStepsMethod(BaseMethod):
                 skip_timesteps=skip_steps,
                 output_type="pt",
             )
+
             print("X0 preds", len(x0_preds))
+
             diffusion_gen_imgs = diffusion_gen_imgs.images.cpu()
 
             gen_images = [
@@ -109,6 +111,11 @@ class SkipStepsMethod(BaseMethod):
             )
 
             x0_preds_dataloader = None
+
+            self.logger.log_batch_of_images(
+                images=x0_preds,
+                name_images="X0 preds",
+            )
 
             # update metrics
             self.validate(
