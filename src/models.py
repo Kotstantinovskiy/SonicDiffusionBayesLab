@@ -1366,6 +1366,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                     latents = step[0]
                 elif len(step) == 2:
                     latents, x0_pred = step[0], step[1]
+                    print("x0_pred shape", x0_pred.shape)
                     x0_preds.append(x0_pred[0])
         
 
@@ -1402,8 +1403,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                 generator=generator,
             )[0]
             has_nsfw_concept = None
-            
-            '''
+            print("Latents shape", latents.shape)
             image_x0_preds = []
             for x0_pred in x0_preds:
                 x0_pred = self.vae.decode(
@@ -1412,7 +1412,6 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                     generator=generator,
                 )[0]
                 image_x0_preds.append(x0_pred)
-            '''
             
         else:
             image = latents
