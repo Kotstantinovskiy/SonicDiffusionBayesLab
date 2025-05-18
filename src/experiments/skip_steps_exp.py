@@ -109,12 +109,11 @@ class SkipStepsMethod(BaseMethod):
                 batch_size=self.batch_size,
                 shuffle=False,
             )
-
             x0_preds_dataloader = None
 
             self.logger.log_batch_of_images(
                 images=x0_preds,
-                name_images="X0 preds",
+                name_images=f"X0 preds {self.config.experiment_name}, Step main: {num_inference_steps}, Skip steps:{' '.join(list(map(str, skip_steps)))}",
             )
 
             # update metrics
