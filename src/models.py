@@ -167,7 +167,6 @@ class StableDiffusionModel(StableDiffusionPipeline):
         timesteps, num_inference_steps = retrieve_timesteps(
             self.scheduler, num_inference_steps, device, timesteps, sigmas
         )
-        print("timesteps", timesteps)
 
         # 5. Prepare latent variables
         num_channels_latents = self.unet.config.in_channels
@@ -259,10 +258,7 @@ class StableDiffusionModel(StableDiffusionPipeline):
                     latents = step[0]
                 elif len(step) == 2:
                     latents, x0_pred = step[0], step[1]
-                    if x0_pred.dim() == 4:  # (B, C, H, W)
-                        x0_preds.append([latent_img.cpu() for latent_img in x0_pred])
-                    else:
-                        x0_preds.append(x0_pred.cpu())
+                    x0_preds.append(x0_pred[0].unsqueeze(0))
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -294,9 +290,16 @@ class StableDiffusionModel(StableDiffusionPipeline):
                 return_dict=False,
                 generator=generator,
             )[0]
-            image, has_nsfw_concept = self.run_safety_checker(
-                image, device, prompt_embeds.dtype
-            )
+            has_nsfw_concept = None
+
+            image_x0_preds = []
+            for x0_pred in x0_preds:
+                x0_pred = self.vae.decode(
+                    x0_pred / self.vae.config.scaling_factor,
+                    return_dict=False,
+                    generator=generator,
+                )[0]
+                image_x0_preds.append(x0_pred)
         else:
             image = latents
             has_nsfw_concept = None
@@ -305,22 +308,30 @@ class StableDiffusionModel(StableDiffusionPipeline):
             do_denormalize = [True] * image.shape[0]
         else:
             do_denormalize = [not has_nsfw for has_nsfw in has_nsfw_concept]
+
         image = self.image_processor.postprocess(
             image, output_type=output_type, do_denormalize=do_denormalize
         )
 
+        image_x0_preds_processed = []
+        for image_x0_pred in image_x0_preds:
+            image_x0_pred = self.image_processor.postprocess(
+                image_x0_pred, output_type=output_type, do_denormalize=[True] * image_x0_pred.shape[0]
+            )
+            image_x0_preds_processed.append(image_x0_pred)
+
         # Offload all models
         self.maybe_free_model_hooks()
-        # print(x0_preds)
+
         if not return_dict:
-            return (image, has_nsfw_concept), execution_time, x0_preds
+            return (image, has_nsfw_concept), execution_time, image_x0_preds_processed
 
         return (
             StableDiffusionPipelineOutput(
                 images=image, nsfw_content_detected=has_nsfw_concept
             ),
             execution_time,
-            x0_preds,
+            image_x0_preds_processed,
         )
 
 
@@ -587,12 +598,7 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                         latents = step[0]
                     elif len(step) == 2:
                         latents, x0_pred = step[0], step[1]
-                        if x0_pred.dim() == 4:  # (B, C, H, W)
-                            x0_preds.append(
-                                [latent_img.cpu() for latent_img in x0_pred]
-                            )
-                        else:
-                            x0_preds.append(x0_pred.cpu())
+                        x0_preds.append(x0_pred[0].unsqueeze(0))
 
                     if isinstance(self.scheduler_second, DPMSolverScheduler):
                         model_output = self.scheduler_second.convert_model_output(
@@ -612,12 +618,7 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                         latents = step[0]
                     elif len(step) == 2:
                         latents, x0_pred = step[0], step[1]
-                        if x0_pred.dim() == 4:  # (B, C, H, W)
-                            x0_preds.append(
-                                [latent_img.cpu() for latent_img in x0_pred]
-                            )
-                        else:
-                            x0_preds.append(x0_pred.cpu())
+                        x0_preds.append(x0_pred[0].unsqueeze(0))
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -656,9 +657,16 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
                 return_dict=False,
                 generator=generator,
             )[0]
-            image, has_nsfw_concept = self.run_safety_checker(
-                image, device, prompt_embeds.dtype
-            )
+            has_nsfw_concept = None
+
+            image_x0_preds = []
+            for x0_pred in x0_preds:
+                x0_pred = self.vae.decode(
+                    x0_pred / self.vae.config.scaling_factor,
+                    return_dict=False,
+                    generator=generator,
+                )[0]
+                image_x0_preds.append(x0_pred)
         else:
             image = latents
             has_nsfw_concept = None
@@ -667,22 +675,30 @@ class StableDiffusionModelTwoSchedulers(StableDiffusionPipeline):
             do_denormalize = [True] * image.shape[0]
         else:
             do_denormalize = [not has_nsfw for has_nsfw in has_nsfw_concept]
+
         image = self.image_processor.postprocess(
             image, output_type=output_type, do_denormalize=do_denormalize
         )
+
+        image_x0_preds_processed = []
+        for image_x0_pred in image_x0_preds:
+            image_x0_pred = self.image_processor.postprocess(
+                image_x0_pred, output_type=output_type, do_denormalize=[True] * image_x0_pred.shape[0]
+            )
+            image_x0_preds_processed.append(image_x0_pred)
 
         # Offload all models
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return (image, has_nsfw_concept), execution_time, x0_preds
+            return (image, has_nsfw_concept), execution_time, image_x0_preds_processed
 
         return (
             StableDiffusionPipelineOutput(
                 images=image, nsfw_content_detected=has_nsfw_concept
             ),
             execution_time,
-            x0_preds,
+            image_x0_preds_processed,
         )
 
     def switch_timestamp(
@@ -1004,12 +1020,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                         latents = step[0]
                     elif len(step) == 2:
                         latents, x0_pred = step[0], step[1]
-                        if x0_pred.dim() == 4:  # (B, C, H, W)
-                            x0_preds.append(
-                                [latent_img.cpu() for latent_img in x0_pred]
-                            )
-                        else:
-                            x0_preds.append(x0_pred.cpu())
+                        x0_preds.append(x0_pred[0].unsqueeze(0))
 
                     model_output = self.scheduler_main.convert_model_output(
                         noise_pred, sample=latents
@@ -1029,12 +1040,7 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                         latents = step[0]
                     elif len(step) == 2:
                         latents, x0_pred = step[0], step[1]
-                        if x0_pred.dim() == 4:  # (B, C, H, W)
-                            x0_preds.append(
-                                [latent_img.cpu() for latent_img in x0_pred]
-                            )
-                        else:
-                            x0_preds.append(x0_pred.cpu())
+                        x0_preds.append(x0_pred[0].unsqueeze(0))
 
                     if isinstance(self.scheduler_inter, DPMSolverScheduler):
                         model_output = self.scheduler_inter.convert_model_output(
@@ -1084,9 +1090,16 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
                 return_dict=False,
                 generator=generator,
             )[0]
-            image, has_nsfw_concept = self.run_safety_checker(
-                image, device, prompt_embeds.dtype
-            )
+            has_nsfw_concept = None
+
+            image_x0_preds = []
+            for x0_pred in x0_preds:
+                x0_pred = self.vae.decode(
+                    x0_pred / self.vae.config.scaling_factor,
+                    return_dict=False,
+                    generator=generator,
+                )[0]
+                image_x0_preds.append(x0_pred)
         else:
             image = latents
             has_nsfw_concept = None
@@ -1095,22 +1108,30 @@ class StableDiffusionModelInterlivingSchedulers(StableDiffusionPipeline):
             do_denormalize = [True] * image.shape[0]
         else:
             do_denormalize = [not has_nsfw for has_nsfw in has_nsfw_concept]
+
         image = self.image_processor.postprocess(
             image, output_type=output_type, do_denormalize=do_denormalize
         )
+
+        image_x0_preds_processed = []
+        for image_x0_pred in image_x0_preds:
+            image_x0_pred = self.image_processor.postprocess(
+                image_x0_pred, output_type=output_type, do_denormalize=[True] * image_x0_pred.shape[0]
+            )
+            image_x0_preds_processed.append(image_x0_pred)
 
         # Offload all models
         self.maybe_free_model_hooks()
 
         if not return_dict:
-            return (image, has_nsfw_concept), execution_time, x0_preds
+            return (image, has_nsfw_concept), execution_time, image_x0_preds_processed
 
         return (
             StableDiffusionPipelineOutput(
                 images=image, nsfw_content_detected=has_nsfw_concept
             ),
             execution_time,
-            x0_preds,
+            image_x0_preds_processed,
         )
 
 
@@ -1361,8 +1382,6 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                     noise_pred, t, latents, **extra_step_kwargs, return_dict=False
                 )
 
-                print(step[1].shape)
-
                 if len(step) == 1:
                     latents = step[0]
                 elif len(step) == 2:
@@ -1402,17 +1421,15 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
                 generator=generator,
             )[0]
             has_nsfw_concept = None
-            print("Latents shape", latents.shape)
+
             image_x0_preds = []
             for x0_pred in x0_preds:
-                print("x0_pred shape", x0_pred.shape)
                 x0_pred = self.vae.decode(
                     x0_pred / self.vae.config.scaling_factor,
                     return_dict=False,
                     generator=generator,
                 )[0]
                 image_x0_preds.append(x0_pred)
-            
         else:
             image = latents
             has_nsfw_concept = None
@@ -1421,7 +1438,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
             do_denormalize = [True] * image.shape[0]
         else:
             do_denormalize = [not has_nsfw for has_nsfw in has_nsfw_concept]
-    
+
         image = self.image_processor.postprocess(
             image, output_type=output_type, do_denormalize=do_denormalize
         )
