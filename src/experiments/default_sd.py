@@ -84,6 +84,8 @@ class DefaultStableDiffusion(BaseMethod):
                 shuffle=False,
             )
 
+            print(x0_preds)
+
             self.logger.log_batch_of_images(
                 images=x0_preds,
                 name_images=f"X0 preds {self.config.experiment_name}, Inference steps: {steps}",
