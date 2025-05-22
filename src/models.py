@@ -1305,7 +1305,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
             latents,
         )
         print("latents_shape", latents.shape)
-        print("latents", latents)
+        print("latents", latents[0][0][0])
 
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
