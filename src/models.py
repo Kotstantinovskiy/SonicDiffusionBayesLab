@@ -1304,6 +1304,7 @@ class StableDiffusionModelSkipTimesteps(StableDiffusionPipeline):
             generator,
             latents,
         )
+        print(generator)
         print("latents_shape", latents.shape)
         print("latents", latents[0][0][0])
 

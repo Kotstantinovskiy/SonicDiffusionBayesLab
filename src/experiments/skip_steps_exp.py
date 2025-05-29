@@ -44,6 +44,8 @@ class SkipStepsMethod(BaseMethod):
         ):
             if self.config.inference.get("batch_count", None) is not None and idx >= self.config.inference.get("batch_count", None):
                 break
+
+            self.setup_generator()
             
             image_file, real_images, prompts = (
                 batch["image_file"],
