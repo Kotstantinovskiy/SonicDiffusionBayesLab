@@ -134,6 +134,8 @@ class InterlivingSchedulerMethod(BaseMethod):
             self.interliving_steps,
         ):
             self.model.to(self.device)
+            self.setup_generator()
+
             gen_images, x0_preds = self.generate(
                 test_dataloader=test_dataloader,
                 num_inference_steps=num_inference_steps_first,

@@ -44,8 +44,6 @@ class SkipStepsMethod(BaseMethod):
         ):
             if self.config.inference.get("batch_count", None) is not None and idx >= self.config.inference.get("batch_count", None):
                 break
-
-            self.setup_generator()
             
             image_file, real_images, prompts = (
                 batch["image_file"],
@@ -101,6 +99,8 @@ class SkipStepsMethod(BaseMethod):
             self.skip_steps,
         ):
             self.model.to(self.device)
+            self.setup_generator()
+
             gen_images, x0_preds = self.generate(
                 test_dataloader=test_dataloader,
                 num_inference_steps=num_inference_steps,
